@@ -6,6 +6,13 @@
 -- version: 0.1
 -- script:  lua
 
+BUTTON_UP = 0
+BUTTON_DOWN = 1
+BUTTON_LEFT = 2
+BUTTON_RIGHT = 3
+
+BUTTON_A = 4
+
 Q_MAX = 11
 R_MAX = 11
 
@@ -63,7 +70,7 @@ end
 function mode_start()
     print("Press A to start", 20, 20)
 
-    if btnp(4) then start_game() end
+    if btnp(BUTTON_A) then start_game() end
 end
 
 function start_game()
