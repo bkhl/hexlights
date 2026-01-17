@@ -55,7 +55,7 @@ end
 
 function hex_to_point(h)
     return Point(
-        (h.q - 1) * HEX_WIDTH + (h.r - 1) * (HEX_WIDTH / 2) + BOARD_OFFSET_X,
+        (h.q - 1) * HEX_WIDTH + (h.r - 1) * (HEX_WIDTH // 2) + BOARD_OFFSET_X,
         (h.r - 1) * HEX_VERTICAL_DISTANCE + BOARD_OFFSET_Y
     )
 end
