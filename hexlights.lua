@@ -12,9 +12,9 @@ R_MAX = 11
 HEX_WIDTH = 12
 HEX_VERTICAL_DISTANCE = 9
 
-HEX_SPRITES = { 0, 2 }
+HEX_SPRITES = { 0, 1 }
 
-SELECT_SPRITE = 4
+SELECT_SPRITE = 2
 
 BOARD_OFFSET_X = 32
 BOARD_OFFSET_Y = 24
@@ -33,13 +33,22 @@ end
 function mode_board()
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
-            local x, y = hex_to_point(q, r)
-            spr(HEX_SPRITES[STATE.board[q][r]], (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
+            draw_hex(HEX_SPRITES[STATE.board[q][r]], q, r)
         end
     end
 
-    local x, y = hex_to_point(STATE.selected_q, STATE.selected_r)
-    spr(SELECT_SPRITE, (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
+    draw_hex(SELECT_SPRITE, STATE.selected_q, STATE.selected_r)
+end
+
+function draw_hex(s, q, r)
+    local x, y = hex_to_point(q, r)
+    spr(s * 2, (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
+end
+
+function hex_to_point(q, r)
+    return
+        (q - 1) * HEX_WIDTH + (r - 1) * (HEX_WIDTH / 2) + BOARD_OFFSET_X,
+        (r - 1) * HEX_VERTICAL_DISTANCE + BOARD_OFFSET_Y
 end
 
 function mode_start()
@@ -65,12 +74,6 @@ function start_game()
     STATE.selected_r = math.random(R_MAX)
 end
 
-function hex_to_point(q, r)
-    return
-        (q - 1) * HEX_WIDTH + (r - 1) * (HEX_WIDTH / 2) + BOARD_OFFSET_X,
-        (r - 1) * HEX_VERTICAL_DISTANCE + BOARD_OFFSET_Y
-end
-
 -- <TILES>
 -- 000:0000000000000000000000cc00000ccc000ccccc00cccccc00cccccc00cccccc
 -- 001:0000000000000000c0000000cc000000cccc0000ccccc000ccccc000ccccc000
@@ -89,3 +92,4 @@ end
 -- <PALETTE>
 -- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE>
+
