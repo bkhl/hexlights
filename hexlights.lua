@@ -35,11 +35,11 @@ function mode_board()
         for r = 1, R_MAX do
             x, y = hex_to_point(q, r)
             spr(HEX_SPRITES[board[q][r]], (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
-            if q == selected_q and r == selected_r then
-                spr(SELECT_SPRITE, (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
-            end
         end
     end
+
+    x, y = hex_to_point(selected_q, selected_r)
+    spr(SELECT_SPRITE, (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
 end
 
 function mode_start()
