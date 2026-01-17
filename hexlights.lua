@@ -19,26 +19,26 @@ SELECT_SPRITE = 4
 BOARD_OFFSET_X = 32
 BOARD_OFFSET_Y = 24
 
-function BOOT()
-    mode = mode_start
+STATE = {}
 
-    start_game() -- REMOVE
+function _G.BOOT()
+    STATE.mode = mode_start
 end
 
-function TIC()
+function _G.TIC()
     cls(7)
-    mode()
+    STATE.mode()
 end
 
 function mode_board()
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
-            x, y = hex_to_point(q, r)
-            spr(HEX_SPRITES[board[q][r]], (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
+            local x, y = hex_to_point(q, r)
+            spr(HEX_SPRITES[STATE.board[q][r]], (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
         end
     end
 
-    x, y = hex_to_point(selected_q, selected_r)
+    local x, y = hex_to_point(STATE.selected_q, STATE.selected_r)
     spr(SELECT_SPRITE, (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
 end
 
@@ -49,9 +49,9 @@ function mode_start()
 end
 
 function start_game()
-    mode = mode_board
+    STATE.mode = mode_board
 
-    board = {}
+    local board = {}
     for q = 1, Q_MAX do
         board[q] = {}
         for r = 1, R_MAX do
@@ -59,8 +59,10 @@ function start_game()
         end
     end
 
-    selected_q = math.random(Q_MAX)
-    selected_r = math.random(R_MAX)
+    STATE.board = board
+
+    STATE.selected_q = math.random(Q_MAX)
+    STATE.selected_r = math.random(R_MAX)
 end
 
 function hex_to_point(q, r)
