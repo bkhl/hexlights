@@ -8,6 +8,7 @@ std = {
 
         -- Lua stdlib
         "math",
+        "table",
 
         -- Drawing
         "circ",
