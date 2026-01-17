@@ -19,9 +19,9 @@ R_MAX = 11
 HEX_WIDTH = 12
 HEX_VERTICAL_DISTANCE = 9
 
-HEX_SPRITES = {0, 1}
+HEX_TILES = { [false] = 0, [true] = 2}
 
-SELECT_SPRITE = 2
+SELECT_SPRITE = 256
 
 BOARD_OFFSET_X = 32
 BOARD_OFFSET_Y = 24
@@ -50,13 +50,19 @@ function start_game()
     for q = 1, Q_MAX do
         board[q] = {}
         for r = 1, R_MAX do
-            board[q][r] = math.random(2)
+            board[q][r] = random_bool()
         end
     end
 
     STATE.board = board
 
     STATE.selected = {math.random(Q_MAX), math.random(R_MAX)}
+end
+
+function random_bool()
+    if math.random(0, 1) == 1 then return true
+    else return false
+    end
 end
 
 function mode_board()
@@ -67,7 +73,7 @@ end
 function draw_board()
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
-            draw_hex(HEX_SPRITES[STATE.board[q][r]], q, r)
+            draw_hex(HEX_TILES[STATE.board[q][r]], q, r)
         end
     end
 
@@ -76,7 +82,7 @@ end
 
 function draw_hex(s, q, r)
     local x, y = hex_to_point(q, r)
-    spr(s * 2, (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
+    spr(s, (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
 end
 
 function handle_buttons()
@@ -93,6 +99,14 @@ function handle_buttons()
     if btnp(BUTTON_RIGHT, 20, 10) then q = q + 1 end
 
     STATE.selected = {clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX)}
+
+    if btnp(BUTTON_A) then toggle_selected() end
+end
+
+function toggle_selected()
+    local q, r = table.unpack(STATE.selected)
+
+    STATE.board[q][r] = not STATE.board[q][r]
 end
 
 function hex_to_point(q, r)
@@ -104,7 +118,8 @@ end
 function clamp(n, min, max)
     if n < min then return min
     elseif max < n then return max
-    else return n end
+    else return n
+    end
 end
 
 -- <TILES>
@@ -112,16 +127,20 @@ end
 -- 001:0000000000000000c0000000cc000000cccc0000ccccc000ccccc000ccccc000
 -- 002:0000000000000000000000ff00000fff000fffff00ffffff00ffffff00ffffff
 -- 003:0000000000000000f0000000ff000000ffff0000fffff000fffff000fffff000
--- 004:0000000000000043000004330004330000430000043000000300000004000000
--- 005:0000000040000000340000000344000000034000000034000000030000000400
 -- 016:00cccccc00cccccc000ccccc0000cccc000000cc000000000000000000000000
 -- 017:ccccc000ccccc000cccc0000ccc00000c0000000000000000000000000000000
 -- 018:00ffffff00ffffff000fffff0000ffff000000ff000000000000000000000000
 -- 019:fffff000fffff000ffff0000fff00000f0000000000000000000000000000000
--- 020:0300000004300000004300000004300000004333000000430000000000000000
--- 021:0000030000003400000340000034000043400000400000000000000000000000
 -- </TILES>
+
+-- <SPRITES>
+-- 000:0000000000000043000004330004330000430000043000000300000004000000
+-- 001:0000000040000000340000000344000000034000000034000000030000000400
+-- 016:0300000004300000004300000004300000004333000000430000000000000000
+-- 017:0000030000003400000340000034000043400000400000000000000000000000
+-- </SPRITES>
 
 -- <PALETTE>
 -- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE>
+
