@@ -38,36 +38,52 @@ function _G.TIC()
 end
 
 function mode_start()
-    print("Press A to start", 20, 20)
+    print("Press A to start", 32, 48, 12, nil, 2)
 
     if btnp(BUTTON_A) then start_game() end
 end
 
-function start_game()
-    STATE.mode = mode_board
+function mode_board()
+    handle_buttons_board()
+    draw_board()
+end
 
+function start_game()
     local board = {}
     for q = 1, Q_MAX do
         board[q] = {}
         for r = 1, R_MAX do
-            board[q][r] = random_bool()
+            board[q][r] = false
+        end
+    end
+    for q = 1, Q_MAX do
+        for r = 1, R_MAX do
+            if math.random(0, 1) == 1 then
+                toggle(board, q, r)
+            end
         end
     end
 
+    STATE.mode = mode_board
     STATE.board = board
 
     STATE.selected = {math.random(Q_MAX), math.random(R_MAX)}
 end
 
-function random_bool()
-    if math.random(0, 1) == 1 then return true
-    else return false
-    end
+function mode_won()
+    handle_buttons_won()
+    draw_board()
+    print("Victory!!", 32, 48, 12, nil, 4)
+    print("Press A to start again", 48, 80, 12)
 end
 
-function mode_board()
-    handle_buttons()
-    draw_board()
+function handle_buttons_won()
+    if btnp(BUTTON_A) then start_game() end
+end
+
+function end_game()
+    STATE.mode = mode_won
+    STATE.selected = nil
 end
 
 function draw_board()
@@ -77,7 +93,9 @@ function draw_board()
         end
     end
 
-    draw_hex(SELECT_SPRITE, table.unpack(STATE.selected))
+    if STATE.selected then
+        draw_hex(SELECT_SPRITE, table.unpack(STATE.selected))
+    end
 end
 
 function draw_hex(s, q, r)
@@ -85,7 +103,7 @@ function draw_hex(s, q, r)
     spr(s, (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
 end
 
-function handle_buttons()
+function handle_buttons_board()
     local q, r = table.unpack(STATE.selected)
 
     -- TODO: Handle multiple buttons pressed simultaneously to do smoother
@@ -100,25 +118,40 @@ function handle_buttons()
 
     STATE.selected = {clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX)}
 
-    if btnp(BUTTON_A) then toggle(q, r) end
-end
+    if btnp(BUTTON_A) then toggle(STATE.board, q, r) end
 
-function toggle(q, r)
-    toggle_single(q, r - 1)
-    toggle_single(q + 1, r - 1)
-    toggle_single(q - 1, r)
-    toggle_single(q, r)
-    toggle_single(q + 1, r)
-    toggle_single(q - 1, r + 1)
-    toggle_single(q, r + 1)
-end
-
-function toggle_single(q, r)
-    if q >= 1 and q <= Q_MAX and r >= 1 and r <= R_MAX then
-        STATE.board[q][r] = not STATE.board[q][r]
+    if game_won() then
+        end_game()
     end
 end
 
+function toggle(board, q, r)
+    toggle_single(board, q, r - 1)
+    toggle_single(board, q + 1, r - 1)
+    toggle_single(board, q - 1, r)
+    toggle_single(board, q, r)
+    toggle_single(board, q + 1, r)
+    toggle_single(board, q - 1, r + 1)
+    toggle_single(board, q, r + 1)
+end
+
+function toggle_single(board, q, r)
+    if q >= 1 and q <= Q_MAX and r >= 1 and r <= R_MAX then
+        board[q][r] = not board[q][r]
+    end
+end
+
+function game_won()
+    for q = 1, Q_MAX do
+        for r = 1, R_MAX do
+            if STATE.board[q][r] == true then
+                return false
+            end
+        end
+    end
+
+    return true
+end
 
 function hex_to_point(q, r)
     return
@@ -134,14 +167,14 @@ function clamp(n, min, max)
 end
 
 -- <TILES>
--- 000:0000000000000000000000cc00000ccc000ccccc00cccccc00cccccc00cccccc
--- 001:0000000000000000c0000000cc000000cccc0000ccccc000ccccc000ccccc000
--- 002:0000000000000000000000ff00000fff000fffff00ffffff00ffffff00ffffff
--- 003:0000000000000000f0000000ff000000ffff0000fffff000fffff000fffff000
--- 016:00cccccc00cccccc000ccccc0000cccc000000cc000000000000000000000000
--- 017:ccccc000ccccc000cccc0000ccc00000c0000000000000000000000000000000
--- 018:00ffffff00ffffff000fffff0000ffff000000ff000000000000000000000000
--- 019:fffff000fffff000ffff0000fff00000f0000000000000000000000000000000
+-- 000:0000000000000000000000ff00000fff000fffff00ffffff00ffffff00ffffff
+-- 001:0000000000000000f0000000ff000000ffff0000fffff000fffff000fffff000
+-- 002:0000000000000000000000cc00000ccc000ccccc00cccccc00cccccc00cccccc
+-- 003:0000000000000000c0000000cc000000cccc0000ccccc000ccccc000ccccc000
+-- 016:00ffffff00ffffff000fffff0000ffff000000ff000000000000000000000000
+-- 017:fffff000fffff000ffff0000fff00000f0000000000000000000000000000000
+-- 018:00cccccc00cccccc000ccccc0000cccc000000cc000000000000000000000000
+-- 019:ccccc000ccccc000cccc0000ccc00000c0000000000000000000000000000000
 -- </TILES>
 
 -- <SPRITES>
