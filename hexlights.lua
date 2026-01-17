@@ -5,13 +5,36 @@
 -- license: MIT License
 -- version: 0.1
 -- script:  lua
+-- input:   gamepad
 
-BUTTON_UP = 0
-BUTTON_DOWN = 1
-BUTTON_LEFT = 2
+
+--------------------------------------------------------------------------------
+--
+-- Constants
+--
+
+BUTTON_UP    = 0
+BUTTON_DOWN  = 1
+BUTTON_LEFT  = 2
 BUTTON_RIGHT = 3
 
-BUTTON_A = 4
+BUTTON_B = 5
+
+DIRECTION_UP_LEFT    = 0
+DIRECTION_UP_RIGHT   = 1
+DIRECTION_RIGHT      = 2
+DIRECTION_DOWN_RIGHT = 3
+DIRECTION_DOWN_LEFT  = 4
+DIRECTION_LEFT       = 5
+
+DIRECTION_TO_VELOCITY = {
+    [DIRECTION_UP_LEFT]    = { 0, -1},
+    [DIRECTION_UP_RIGHT]   = { 1, -1},
+    [DIRECTION_RIGHT]      = { 1,  0},
+    [DIRECTION_DOWN_RIGHT] = { 0,  1},
+    [DIRECTION_DOWN_LEFT]  = {-1,  1},
+    [DIRECTION_LEFT]       = {-1,  0}
+}
 
 Q_MAX = 11
 R_MAX = 11
@@ -26,7 +49,15 @@ SELECT_SPRITE = 256
 BOARD_OFFSET_X = 32
 BOARD_OFFSET_Y = 24
 
+
+--------------------------------------------------------------------------------
+-- Game state
+
 STATE = {}
+
+
+--------------------------------------------------------------------------------
+-- TIC-80 Callbacks
 
 function _G.BOOT()
     STATE.mode = mode_start
@@ -37,11 +68,19 @@ function _G.TIC()
     STATE.mode()
 end
 
-function mode_start()
-    print("Press A to start", 32, 48, 12, nil, 2)
 
-    if btnp(BUTTON_A) then start_game() end
+--------------------------------------------------------------------------------
+-- Start screen
+
+function mode_start()
+    print("Press B to start", 32, 48, 12, nil, 2)
+
+    if btnp(BUTTON_B) then start_game() end
 end
+
+
+--------------------------------------------------------------------------------
+-- Game board
 
 function mode_board()
     handle_buttons_board()
@@ -70,22 +109,6 @@ function start_game()
     STATE.selected = {math.random(Q_MAX), math.random(R_MAX)}
 end
 
-function mode_won()
-    handle_buttons_won()
-    draw_board()
-    print("Victory!!", 32, 48, 12, nil, 4)
-    print("Press A to start again", 48, 80, 12)
-end
-
-function handle_buttons_won()
-    if btnp(BUTTON_A) then start_game() end
-end
-
-function end_game()
-    STATE.mode = mode_won
-    STATE.selected = nil
-end
-
 function draw_board()
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
@@ -106,22 +129,61 @@ end
 function handle_buttons_board()
     local q, r = table.unpack(STATE.selected)
 
-    -- TODO: Handle multiple buttons pressed simultaneously to do smoother
-    --       diagonal movement.
+    local direction = get_hexagonal_button_direction(r)
+    if not direction then return end
+    local velocity_q, velocity_r = table.unpack(DIRECTION_TO_VELOCITY[direction])
 
-    -- TODO: Move zig-zag when moving up/down?
-
-    if btnp(BUTTON_UP, 20, 10) then r = r - 1 end
-    if btnp(BUTTON_DOWN, 20, 10) then r = r + 1 end
-    if btnp(BUTTON_LEFT, 20, 10) then q = q - 1 end
-    if btnp(BUTTON_RIGHT, 20, 10) then q = q + 1 end
+    q = q + velocity_q
+    r = r + velocity_r
 
     STATE.selected = {clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX)}
 
-    if btnp(BUTTON_A) then toggle(STATE.board, q, r) end
+    if btnp(BUTTON_B) then toggle(STATE.board, q, r) end
 
     if game_won() then
         end_game()
+    end
+end
+
+--[[
+    Work out current direction to move based on combination of pressed D-pad
+    buttons.
+
+    Pressing up+down or left+right simultaneously will cancel out.
+--]]
+function get_hexagonal_button_direction(r)
+    if btn(BUTTON_UP) then
+        if btn(BUTTON_DOWN) then
+            if btn(BUTTON_LEFT) then
+                if not btn(BUTTON_RIGHT) then
+                    return DIRECTION_LEFT
+                end
+            elseif btn(BUTTON_RIGHT) then
+                return DIRECTION_RIGHT
+            end
+        else
+            if btn(BUTTON_LEFT) then
+                return DIRECTION_UP_LEFT
+            elseif btn(BUTTON_RIGHT) then
+                return DIRECTION_UP_RIGHT
+            elseif r % 2 == 0 then
+                return DIRECTION_UP_LEFT
+            else
+                return DIRECTION_UP_RIGHT
+            end
+        end
+    elseif btn(BUTTON_DOWN) then
+        if btn(BUTTON_LEFT) then
+            if not btn(BUTTON_RIGHT) then
+                return DIRECTION_DOWN_LEFT
+            end
+        elseif btn(BUTTON_RIGHT) then
+            return DIRECTION_DOWN_RIGHT
+        elseif r % 2 then
+            return DIRECTION_DOWN_LEFT
+        else
+            return DIRECTION_DOWN_RIGHT
+        end
     end
 end
 
@@ -159,6 +221,29 @@ function hex_to_point(q, r)
         (r - 1) * HEX_VERTICAL_DISTANCE + BOARD_OFFSET_Y
 end
 
+
+--------------------------------------------------------------------------------
+--
+-- Game board
+--
+
+function mode_won()
+    handle_buttons_won()
+    draw_board()
+    print("Victory!!", 32, 48, 12, nil, 4)
+    print("Press B to start again", 48, 80, 12)
+end
+
+function handle_buttons_won()
+    if btnp(BUTTON_B) then start_game() end
+end
+
+function end_game()
+    STATE.mode = mode_won
+    STATE.selected = nil
+end
+
+
 function clamp(n, min, max)
     if n < min then return min
     elseif max < n then return max
@@ -187,4 +272,3 @@ end
 -- <PALETTE>
 -- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE>
-
