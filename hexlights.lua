@@ -100,14 +100,25 @@ function handle_buttons()
 
     STATE.selected = {clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX)}
 
-    if btnp(BUTTON_A) then toggle_selected() end
+    if btnp(BUTTON_A) then toggle(q, r) end
 end
 
-function toggle_selected()
-    local q, r = table.unpack(STATE.selected)
-
-    STATE.board[q][r] = not STATE.board[q][r]
+function toggle(q, r)
+    toggle_single(q, r - 1)
+    toggle_single(q + 1, r - 1)
+    toggle_single(q - 1, r)
+    toggle_single(q, r)
+    toggle_single(q + 1, r)
+    toggle_single(q - 1, r + 1)
+    toggle_single(q, r + 1)
 end
+
+function toggle_single(q, r)
+    if q >= 1 and q <= Q_MAX and r >= 1 and r <= R_MAX then
+        STATE.board[q][r] = not STATE.board[q][r]
+    end
+end
+
 
 function hex_to_point(q, r)
     return
