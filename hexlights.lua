@@ -30,25 +30,34 @@ function _G.TIC()
     STATE.mode()
 end
 
+function Point(x, y)
+    return { x = x, y = y }
+end
+
+function Hex(q, r)
+    return { q = q, r = r }
+end
+
 function mode_board()
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
-            draw_hex(HEX_SPRITES[STATE.board[q][r]], q, r)
+            draw_hex(HEX_SPRITES[STATE.board[q][r]], Hex(q, r))
         end
     end
 
-    draw_hex(SELECT_SPRITE, STATE.selected_q, STATE.selected_r)
+    draw_hex(SELECT_SPRITE, STATE.selected)
 end
 
-function draw_hex(s, q, r)
-    local x, y = hex_to_point(q, r)
-    spr(s * 2, (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
+function draw_hex(s, h)
+    local p = hex_to_point(h)
+    spr(s * 2, (p.x - 8), (p.y - 8), 0, 1, 0, 0, 2, 2)
 end
 
-function hex_to_point(q, r)
-    return
-        (q - 1) * HEX_WIDTH + (r - 1) * (HEX_WIDTH / 2) + BOARD_OFFSET_X,
-        (r - 1) * HEX_VERTICAL_DISTANCE + BOARD_OFFSET_Y
+function hex_to_point(h)
+    return Point(
+        (h.q - 1) * HEX_WIDTH + (h.r - 1) * (HEX_WIDTH / 2) + BOARD_OFFSET_X,
+        (h.r - 1) * HEX_VERTICAL_DISTANCE + BOARD_OFFSET_Y
+    )
 end
 
 function mode_start()
@@ -70,8 +79,7 @@ function start_game()
 
     STATE.board = board
 
-    STATE.selected_q = math.random(Q_MAX)
-    STATE.selected_r = math.random(R_MAX)
+    STATE.selected = Hex(math.random(Q_MAX), math.random(R_MAX))
 end
 
 -- <TILES>
