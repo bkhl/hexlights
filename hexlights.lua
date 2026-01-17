@@ -84,6 +84,9 @@ end
 
 function mode_board()
     handle_buttons_board()
+
+    if game_won() then end_game() end
+
     draw_board()
 end
 
@@ -130,19 +133,42 @@ function handle_buttons_board()
     local q, r = table.unpack(STATE.selected)
 
     local direction = get_hexagonal_button_direction(r)
-    if not direction then return end
-    local velocity_q, velocity_r = table.unpack(DIRECTION_TO_VELOCITY[direction])
 
-    q = q + velocity_q
-    r = r + velocity_r
+    -- FIXME: Holding up/down should keep counter going even though we're moving
+    --        zigzag.
 
-    STATE.selected = {clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX)}
+    -- FIXME: Make logic around diagonal moves smoother. Maybe just treat plain
+    --        r movement as the baseline if up/down is pressed, and just use
+    --        simultaneous hold of left/right as a hint?
+
+    if direction then
+        if direction == STATE.direction then
+            if STATE.direction_hold_frames == 0 then
+                move_selection(direction)
+                STATE.direction_hold_frames = STATE.direction_hold_frames + 1
+            elseif STATE.direction_hold_frames == 20 then
+                move_selection(direction)
+                STATE.direction_hold_frames = 10
+            else
+                STATE.direction_hold_frames = STATE.direction_hold_frames + 1
+            end
+        else
+            STATE.direction_hold_frames = 0
+        end
+        STATE.direction = direction
+    else
+        STATE.direction = nil
+        STATE.direction_hold_frames = nil
+    end
 
     if btnp(BUTTON_B) then toggle(STATE.board, q, r) end
+end
 
-    if game_won() then
-        end_game()
-    end
+function move_selection(direction)
+    local q, r = table.unpack(STATE.selected)
+    local velocity_q, velocity_r = table.unpack(DIRECTION_TO_VELOCITY[direction])
+    q, r = q + velocity_q, r + velocity_r
+    STATE.selected = {clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX)}
 end
 
 --[[
@@ -179,10 +205,18 @@ function get_hexagonal_button_direction(r)
             end
         elseif btn(BUTTON_RIGHT) then
             return DIRECTION_DOWN_RIGHT
-        elseif r % 2 then
+        elseif r % 2 == 0 then
             return DIRECTION_DOWN_LEFT
         else
             return DIRECTION_DOWN_RIGHT
+        end
+    else
+        if btn(BUTTON_LEFT) then
+            if not btn(BUTTON_RIGHT) then
+                return DIRECTION_LEFT
+            end
+        elseif btn(BUTTON_RIGHT) then
+            return DIRECTION_RIGHT
         end
     end
 end
