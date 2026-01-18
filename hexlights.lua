@@ -1,7 +1,7 @@
 -- title:   Hexlights
 -- author:  Bjoern Lindstroem <bkhl@elektrubadur.se>
 -- desc:    Hexagonal lights out
--- site:    https://elektrubadur.se/
+-- site:    https://github.com/bkhl/hexlights
 -- license: MIT License
 -- version: 0.1
 -- script:  lua
