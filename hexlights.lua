@@ -134,15 +134,18 @@ function handle_buttons_board()
 
     local direction = get_hexagonal_button_direction(r)
 
-    -- FIXME: Holding up/down should keep counter going even though we're moving
-    --        zigzag.
-
-    -- FIXME: Make logic around diagonal moves smoother. Maybe just treat plain
-    --        r movement as the baseline if up/down is pressed, and just use
-    --        simultaneous hold of left/right as a hint?
+    --[[
+        FIXME: Start up/down movement if one of the two of a set of two buttons
+        was pressed in previous frame and now both are pressed.
+    ]]
 
     if direction then
-        if direction == STATE.direction then
+        if direction == STATE.direction
+            or (direction == DIRECTION_UP_LEFT and STATE.direction == DIRECTION_UP_RIGHT)
+            or (direction == DIRECTION_UP_RIGHT and STATE.direction == DIRECTION_UP_LEFT)
+            or (direction == DIRECTION_DOWN_RIGHT and STATE.direction == DIRECTION_DOWN_LEFT)
+            or (direction == DIRECTION_DOWN_LEFT and STATE.direction == DIRECTION_DOWN_RIGHT)
+        then
             if STATE.direction_hold_frames == 0 then
                 move_selection(direction)
                 STATE.direction_hold_frames = STATE.direction_hold_frames + 1
@@ -210,14 +213,12 @@ function get_hexagonal_button_direction(r)
         else
             return DIRECTION_DOWN_RIGHT
         end
-    else
-        if btn(BUTTON_LEFT) then
-            if not btn(BUTTON_RIGHT) then
-                return DIRECTION_LEFT
-            end
-        elseif btn(BUTTON_RIGHT) then
-            return DIRECTION_RIGHT
+    elseif btn(BUTTON_LEFT) then
+        if not btn(BUTTON_RIGHT) then
+            return DIRECTION_LEFT
         end
+    elseif btn(BUTTON_RIGHT) then
+        return DIRECTION_RIGHT
     end
 end
 
