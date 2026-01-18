@@ -132,6 +132,22 @@ end
 function handle_buttons_board()
     local q, r = table.unpack(S.selected)
 
+    --[[
+        Plan:
+
+        A State machine? For starting state:
+          1 Each frame check btnp of all buttons and remember them.
+          2 If buttons are remembered from previous frame, check all buttons again
+            with btn, and trigger a move and go into "repeat" mode.
+
+        B In repeat mode:
+          1 keep checking that the buttons for the current
+            directions are pressed and count until we should repeat the move.
+          2 also check all buttons with btnp. If any detected remember them and go back to A2
+
+        Have mechanism to allow "dropping" a button for one frame while in repeat mode?
+    --]]
+
     if (btnp(BUTTON_UP, 20, 10) and btn(BUTTON_LEFT) or (btnp(BUTTON_LEFT, 20, 10) and btn(BUTTON_UP))) then
         move(DIRECTION_UP_LEFT)
     elseif (btnp(BUTTON_UP, 20, 10) and btn(BUTTON_RIGHT) or (btnp(BUTTON_RIGHT, 20, 10) and btn(BUTTON_UP))) then
