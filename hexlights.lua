@@ -91,23 +91,23 @@ function mode_board()
 end
 
 function start_game()
-    local board = {}
+    S.mode = mode_board
+
+    S.board = {}
     for q = 1, Q_MAX do
-        board[q] = {}
+        S.board[q] = {}
         for r = 1, R_MAX do
-            board[q][r] = false
-        end
-    end
-    for q = 1, Q_MAX do
-        for r = 1, R_MAX do
-            if math.random(0, 1) == 1 then
-                toggle(board, q, r)
-            end
+            S.board[q][r] = false
         end
     end
 
-    S.mode = mode_board
-    S.board = board
+    for q = 1, Q_MAX do
+        for r = 1, R_MAX do
+            if math.random(0, 1) == 1 then
+                toggle(q, r)
+            end
+        end
+    end
 
     S.selected = {math.random(Q_MAX), math.random(R_MAX)}
 end
@@ -132,89 +132,47 @@ end
 function handle_buttons_board()
     local q, r = table.unpack(S.selected)
 
-    local direction = get_hexagonal_button_direction(r)
-
-    --[[
-        FIXME: Start up/down movement if one of the two of a set of two buttons
-        was pressed in previous frame and now both are pressed.
-    ]]
-
-    if direction then
-        if direction == S.direction
-            or (direction == DIRECTION_UP_LEFT and S.direction == DIRECTION_UP_RIGHT)
-            or (direction == DIRECTION_UP_RIGHT and S.direction == DIRECTION_UP_LEFT)
-            or (direction == DIRECTION_DOWN_RIGHT and S.direction == DIRECTION_DOWN_LEFT)
-            or (direction == DIRECTION_DOWN_LEFT and S.direction == DIRECTION_DOWN_RIGHT)
-        then
-            if S.direction_hold_frames == 0 then
-                move_selection(direction)
-                S.direction_hold_frames = S.direction_hold_frames + 1
-            elseif S.direction_hold_frames == 20 then
-                move_selection(direction)
-                S.direction_hold_frames = 10
-            else
-                S.direction_hold_frames = S.direction_hold_frames + 1
-            end
-        else
-            S.direction_hold_frames = 0
-        end
-        S.direction = direction
-    else
-        if S.direction and S.direction_holdframes == 0 then
-            move_selection(S.direction)
-        end
-        S.direction = nil
-        S.direction_hold_frames = nil
+    if (btnp(BUTTON_UP, 20, 10) and btn(BUTTON_LEFT) or (btnp(BUTTON_LEFT, 20, 10) and btn(BUTTON_UP))) then
+        move(DIRECTION_UP_LEFT)
+    elseif (btnp(BUTTON_UP, 20, 10) and btn(BUTTON_RIGHT) or (btnp(BUTTON_RIGHT, 20, 10) and btn(BUTTON_UP))) then
+        move(DIRECTION_UP_RIGHT)
+    elseif (btnp(BUTTON_DOWN, 20, 10) and btn(BUTTON_LEFT) or (btnp(BUTTON_LEFT, 20, 10) and btn(BUTTON_DOWN))) then
+        move(DIRECTION_DOWN_LEFT)
+    elseif (btnp(BUTTON_DOWN, 20, 10) and btn(BUTTON_RIGHT) or (btnp(BUTTON_RIGHT, 20, 10) and btn(BUTTON_DOWN))) then
+        move(DIRECTION_DOWN_RIGHT)
+    elseif btnp(BUTTON_UP, 20, 10) then
+        move(r % 2 == 0 and DIRECTION_UP_LEFT or DIRECTION_UP_RIGHT)
+    elseif btnp(BUTTON_LEFT, 20, 10) then
+        move(DIRECTION_LEFT)
+    elseif btnp(BUTTON_DOWN, 20, 10) then
+        move(r % 2 == 0 and DIRECTION_DOWN_LEFT or DIRECTION_DOWN_RIGHT)
+    elseif btnp(BUTTON_RIGHT, 20, 10) then
+        move(DIRECTION_RIGHT)
     end
 
-    if btnp(BUTTON_B) then toggle(S.board, q, r) end
+    if btnp(BUTTON_B) then toggle(q, r) end
 end
 
-function move_selection(direction)
+function move(direction)
     local q, r = table.unpack(S.selected)
     local velocity_q, velocity_r = table.unpack(DIRECTION_TO_VELOCITY[direction])
     q, r = q + velocity_q, r + velocity_r
     S.selected = {clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX)}
 end
 
---[[
-    Work out current direction to move based on combination of pressed D-pad
-    buttons.
-
-    Pressing up+down or left+right simultaneously will cancel out.
---]]
-function get_hexagonal_button_direction(r)
-    local up = btn(BUTTON_UP)
-    local down = btn(BUTTON_DOWN)
-    local left = btn(BUTTON_LEFT)
-    local right = btn(BUTTON_RIGHT)
-
-    if up and down then return nil
-    elseif left and right then return nil
-    elseif up and left then return DIRECTION_UP_LEFT
-    elseif up and right then return DIRECTION_UP_RIGHT
-    elseif down and left then return DIRECTION_DOWN_LEFT
-    elseif down and right then return DIRECTION_DOWN_RIGHT
-    elseif up then return r % 2 == 0 and DIRECTION_UP_LEFT or DIRECTION_UP_RIGHT
-    elseif down then return r % 2 == 0 and DIRECTION_DOWN_LEFT or DIRECTION_DOWN_RIGHT
-    elseif left then return DIRECTION_LEFT
-    elseif right then return DIRECTION_RIGHT
-    end
+function toggle(q, r)
+    toggle_aux(q, r - 1)
+    toggle_aux(q + 1, r - 1)
+    toggle_aux(q - 1, r)
+    toggle_aux(q, r)
+    toggle_aux(q + 1, r)
+    toggle_aux(q - 1, r + 1)
+    toggle_aux(q, r + 1)
 end
 
-function toggle(board, q, r)
-    toggle_single(board, q, r - 1)
-    toggle_single(board, q + 1, r - 1)
-    toggle_single(board, q - 1, r)
-    toggle_single(board, q, r)
-    toggle_single(board, q + 1, r)
-    toggle_single(board, q - 1, r + 1)
-    toggle_single(board, q, r + 1)
-end
-
-function toggle_single(board, q, r)
+function toggle_aux(q, r)
     if q >= 1 and q <= Q_MAX and r >= 1 and r <= R_MAX then
-        board[q][r] = not board[q][r]
+        S.board[q][r] = not S.board[q][r]
     end
 end
 
