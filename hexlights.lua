@@ -194,11 +194,8 @@ function hex_to_point(q, r)
         (r - 1) * HEX_VERTICAL_DISTANCE + BOARD_OFFSET_Y
 end
 
-
 --------------------------------------------------------------------------------
---
--- Game board
---
+-- Game end
 
 function mode_won()
     handle_buttons_won()
@@ -216,6 +213,8 @@ function end_game()
     S.selected = nil
 end
 
+--------------------------------------------------------------------------------
+-- Utilities
 
 function clamp(n, min, max)
     if n < min then return min
