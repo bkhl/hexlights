@@ -160,6 +160,9 @@ function handle_buttons_board()
         end
         S.direction = direction
     else
+        if S.direction and S.direction_holdframes == 0 then
+            move_selection(S.direction)
+        end
         S.direction = nil
         S.direction_hold_frames = nil
     end
