@@ -53,19 +53,19 @@ BOARD_OFFSET_Y = 24
 --------------------------------------------------------------------------------
 -- Game state
 
-STATE = {}
+S = {}
 
 
 --------------------------------------------------------------------------------
 -- TIC-80 Callbacks
 
 function _G.BOOT()
-    STATE.mode = mode_start
+    S.mode = mode_start
 end
 
 function _G.TIC()
     cls(7)
-    STATE.mode()
+    S.mode()
 end
 
 
@@ -106,21 +106,21 @@ function start_game()
         end
     end
 
-    STATE.mode = mode_board
-    STATE.board = board
+    S.mode = mode_board
+    S.board = board
 
-    STATE.selected = {math.random(Q_MAX), math.random(R_MAX)}
+    S.selected = {math.random(Q_MAX), math.random(R_MAX)}
 end
 
 function draw_board()
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
-            draw_hex(HEX_TILES[STATE.board[q][r]], q, r)
+            draw_hex(HEX_TILES[S.board[q][r]], q, r)
         end
     end
 
-    if STATE.selected then
-        draw_hex(SELECT_SPRITE, table.unpack(STATE.selected))
+    if S.selected then
+        draw_hex(SELECT_SPRITE, table.unpack(S.selected))
     end
 end
 
@@ -130,7 +130,7 @@ function draw_hex(s, q, r)
 end
 
 function handle_buttons_board()
-    local q, r = table.unpack(STATE.selected)
+    local q, r = table.unpack(S.selected)
 
     local direction = get_hexagonal_button_direction(r)
 
@@ -140,38 +140,38 @@ function handle_buttons_board()
     ]]
 
     if direction then
-        if direction == STATE.direction
-            or (direction == DIRECTION_UP_LEFT and STATE.direction == DIRECTION_UP_RIGHT)
-            or (direction == DIRECTION_UP_RIGHT and STATE.direction == DIRECTION_UP_LEFT)
-            or (direction == DIRECTION_DOWN_RIGHT and STATE.direction == DIRECTION_DOWN_LEFT)
-            or (direction == DIRECTION_DOWN_LEFT and STATE.direction == DIRECTION_DOWN_RIGHT)
+        if direction == S.direction
+            or (direction == DIRECTION_UP_LEFT and S.direction == DIRECTION_UP_RIGHT)
+            or (direction == DIRECTION_UP_RIGHT and S.direction == DIRECTION_UP_LEFT)
+            or (direction == DIRECTION_DOWN_RIGHT and S.direction == DIRECTION_DOWN_LEFT)
+            or (direction == DIRECTION_DOWN_LEFT and S.direction == DIRECTION_DOWN_RIGHT)
         then
-            if STATE.direction_hold_frames == 0 then
+            if S.direction_hold_frames == 0 then
                 move_selection(direction)
-                STATE.direction_hold_frames = STATE.direction_hold_frames + 1
-            elseif STATE.direction_hold_frames == 20 then
+                S.direction_hold_frames = S.direction_hold_frames + 1
+            elseif S.direction_hold_frames == 20 then
                 move_selection(direction)
-                STATE.direction_hold_frames = 10
+                S.direction_hold_frames = 10
             else
-                STATE.direction_hold_frames = STATE.direction_hold_frames + 1
+                S.direction_hold_frames = S.direction_hold_frames + 1
             end
         else
-            STATE.direction_hold_frames = 0
+            S.direction_hold_frames = 0
         end
-        STATE.direction = direction
+        S.direction = direction
     else
-        STATE.direction = nil
-        STATE.direction_hold_frames = nil
+        S.direction = nil
+        S.direction_hold_frames = nil
     end
 
-    if btnp(BUTTON_B) then toggle(STATE.board, q, r) end
+    if btnp(BUTTON_B) then toggle(S.board, q, r) end
 end
 
 function move_selection(direction)
-    local q, r = table.unpack(STATE.selected)
+    local q, r = table.unpack(S.selected)
     local velocity_q, velocity_r = table.unpack(DIRECTION_TO_VELOCITY[direction])
     q, r = q + velocity_q, r + velocity_r
-    STATE.selected = {clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX)}
+    S.selected = {clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX)}
 end
 
 --[[
@@ -241,7 +241,7 @@ end
 function game_won()
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
-            if STATE.board[q][r] == true then
+            if S.board[q][r] == true then
                 return false
             end
         end
@@ -274,8 +274,8 @@ function handle_buttons_won()
 end
 
 function end_game()
-    STATE.mode = mode_won
-    STATE.selected = nil
+    S.mode = mode_won
+    S.selected = nil
 end
 
 
