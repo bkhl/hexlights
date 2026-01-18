@@ -184,44 +184,21 @@ end
     Pressing up+down or left+right simultaneously will cancel out.
 --]]
 function get_hexagonal_button_direction(r)
-    if btn(BUTTON_UP) then
-        if btn(BUTTON_DOWN) then
-            if btn(BUTTON_LEFT) then
-                if not btn(BUTTON_RIGHT) then
-                    return DIRECTION_LEFT
-                end
-            elseif btn(BUTTON_RIGHT) then
-                return DIRECTION_RIGHT
-            end
-        else
-            if btn(BUTTON_LEFT) then
-                return DIRECTION_UP_LEFT
-            elseif btn(BUTTON_RIGHT) then
-                return DIRECTION_UP_RIGHT
-            elseif r % 2 == 0 then
-                return DIRECTION_UP_LEFT
-            else
-                return DIRECTION_UP_RIGHT
-            end
-        end
-    elseif btn(BUTTON_DOWN) then
-        if btn(BUTTON_LEFT) then
-            if not btn(BUTTON_RIGHT) then
-                return DIRECTION_DOWN_LEFT
-            end
-        elseif btn(BUTTON_RIGHT) then
-            return DIRECTION_DOWN_RIGHT
-        elseif r % 2 == 0 then
-            return DIRECTION_DOWN_LEFT
-        else
-            return DIRECTION_DOWN_RIGHT
-        end
-    elseif btn(BUTTON_LEFT) then
-        if not btn(BUTTON_RIGHT) then
-            return DIRECTION_LEFT
-        end
-    elseif btn(BUTTON_RIGHT) then
-        return DIRECTION_RIGHT
+    local up = btn(BUTTON_UP)
+    local down = btn(BUTTON_DOWN)
+    local left = btn(BUTTON_LEFT)
+    local right = btn(BUTTON_RIGHT)
+
+    if up and down then return nil
+    elseif left and right then return nil
+    elseif up and left then return DIRECTION_UP_LEFT
+    elseif up and right then return DIRECTION_UP_RIGHT
+    elseif down and left then return DIRECTION_DOWN_LEFT
+    elseif down and right then return DIRECTION_DOWN_RIGHT
+    elseif up then return r % 2 == 0 and DIRECTION_UP_LEFT or DIRECTION_UP_RIGHT
+    elseif down then return r % 2 == 0 and DIRECTION_DOWN_LEFT or DIRECTION_DOWN_RIGHT
+    elseif left then return DIRECTION_LEFT
+    elseif right then return DIRECTION_RIGHT
     end
 end
 
