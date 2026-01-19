@@ -8,7 +8,7 @@ define run
 endef
 
 lint:
-	$(run) $(LUACHECK_IMAGE) --no-color $(CURDIR) .luacheckrc
+	$(run) $(LUACHECK_IMAGE) --no-color $(CURDIR)
 
 test:
 	$(run) $(BUSTED_IMAGE) --pattern=test_ $(CURDIR)

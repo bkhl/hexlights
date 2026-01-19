@@ -7,6 +7,13 @@
 -- script:  lua
 -- input:   gamepad
 
+-- luacheck: allow defined top
+-- luacheck: ignore 131
+-- luacheck: globals math table
+-- luacheck: globals circ circb elli ellib clip cls font line map pix print rect rectb spr tri trib textri ttri
+-- luacheck: globals btn btnp key keyp mouse
+-- luacheck: globals music sfx
+-- luacheck: globals exit reset time tstamp trac
 
 --------------------------------------------------------------------------------
 --
@@ -59,11 +66,11 @@ S = nil
 --------------------------------------------------------------------------------
 -- TIC-80 Callbacks
 
-function _G.BOOT()
+function BOOT()
     S = { mode = mode_start }
 end
 
-function _G.TIC()
+function TIC()
     cls(7)
     S.mode()
 end
@@ -226,7 +233,9 @@ function mode_game_end()
 end
 
 function handle_button_game_end()
-    if btnp(BUTTON_B) then start_game() end
+    if btnp(BUTTON_B) then
+        S = get_game_start_state()
+    end
 end
 
 function get_game_end_state()

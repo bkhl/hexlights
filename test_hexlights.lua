@@ -1,3 +1,9 @@
+-- Busted
+-- luacheck: globals describe it assert
+
+-- Functions to test
+-- luacheck: globals clamp
+
 require("hexlights")
 
 describe(
