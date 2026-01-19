@@ -9,11 +9,8 @@
 
 -- luacheck: allow defined top
 -- luacheck: ignore 131
--- luacheck: globals math table
--- luacheck: globals circ circb elli ellib clip cls font line map pix print rect rectb spr tri trib textri ttri
--- luacheck: globals btn btnp key keyp mouse
--- luacheck: globals music sfx
--- luacheck: globals exit reset time tstamp trac
+-- luacheck: globals cls print spr
+-- luacheck: globals btn btnp
 
 --------------------------------------------------------------------------------
 --
