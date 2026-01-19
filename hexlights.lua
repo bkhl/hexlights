@@ -111,7 +111,7 @@ function get_game_start_state()
 
     return {
         mode = mode_game,
-        selected = {math.random(Q_MAX), math.random(R_MAX)},
+        selected = nil,
         board = board
     }
 end
@@ -134,7 +134,7 @@ function draw_hex(s, q, r)
 end
 
 function handle_buttons_game()
-    local q, r = table.unpack(S.selected)
+    local q, r = get_selected()
 
     --[[
         Plan:
@@ -174,7 +174,7 @@ function handle_buttons_game()
 end
 
 function move(direction)
-    local q, r = table.unpack(S.selected)
+    local q, r = get_selected()
     local velocity_q, velocity_r = table.unpack(DIRECTION_TO_VELOCITY[direction])
     q, r = q + velocity_q, r + velocity_r
     S.selected = {clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX)}
@@ -212,6 +212,14 @@ function hex_to_point(q, r)
     return
         (q - 1) * HEX_WIDTH + (r - 1) * (HEX_WIDTH // 2) + BOARD_OFFSET_X,
         (r - 1) * HEX_VERTICAL_DISTANCE + BOARD_OFFSET_Y
+end
+
+function get_selected()
+    if S.selected then
+        return table.unpack(S.selected)
+    end
+
+    return Q_MAX // 2, R_MAX // 2
 end
 
 
@@ -271,3 +279,4 @@ end
 -- <PALETTE>
 -- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE>
+
