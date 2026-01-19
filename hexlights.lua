@@ -53,14 +53,14 @@ BOARD_OFFSET_Y = 24
 --------------------------------------------------------------------------------
 -- Game state
 
-S = {}
+S = nil
 
 
 --------------------------------------------------------------------------------
 -- TIC-80 Callbacks
 
 function _G.BOOT()
-    S.mode = mode_start
+    S = { mode = mode_start }
 end
 
 function _G.TIC()
@@ -75,41 +75,45 @@ end
 function mode_start()
     print("Press B to start", 32, 48, 12, nil, 2)
 
-    if btnp(BUTTON_B) then start_game() end
+    if btnp(BUTTON_B) then
+        S = get_game_start_state()
+    end
 end
 
 
 --------------------------------------------------------------------------------
 -- Game board
 
-function mode_board()
-    handle_buttons_board()
+function mode_game()
+    handle_buttons_game()
 
-    if game_won() then end_game() end
+    if game_won() then S = get_game_end_state() end
 
     draw_board()
 end
 
-function start_game()
-    S.mode = mode_board
-
-    S.board = {}
+function get_game_start_state()
+    local board = {}
     for q = 1, Q_MAX do
-        S.board[q] = {}
+        board[q] = {}
         for r = 1, R_MAX do
-            S.board[q][r] = false
+            board[q][r] = false
         end
     end
 
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
             if math.random(0, 1) == 1 then
-                toggle(q, r)
+                toggle(board, q, r)
             end
         end
     end
 
-    S.selected = {math.random(Q_MAX), math.random(R_MAX)}
+    return {
+        mode = mode_game,
+        selected = {math.random(Q_MAX), math.random(R_MAX)},
+        board = board
+    }
 end
 
 function draw_board()
@@ -129,7 +133,7 @@ function draw_hex(s, q, r)
     spr(s, (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
 end
 
-function handle_buttons_board()
+function handle_buttons_game()
     local q, r = table.unpack(S.selected)
 
     --[[
@@ -166,7 +170,7 @@ function handle_buttons_board()
         move(DIRECTION_RIGHT)
     end
 
-    if btnp(BUTTON_B) then toggle(q, r) end
+    if btnp(BUTTON_B) then toggle(S.board, q, r) end
 end
 
 function move(direction)
@@ -176,19 +180,19 @@ function move(direction)
     S.selected = {clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX)}
 end
 
-function toggle(q, r)
-    toggle_aux(q, r - 1)
-    toggle_aux(q + 1, r - 1)
-    toggle_aux(q - 1, r)
-    toggle_aux(q, r)
-    toggle_aux(q + 1, r)
-    toggle_aux(q - 1, r + 1)
-    toggle_aux(q, r + 1)
+function toggle(board, q, r)
+    toggle_aux(board, q, r - 1)
+    toggle_aux(board, q + 1, r - 1)
+    toggle_aux(board, q - 1, r)
+    toggle_aux(board, q, r)
+    toggle_aux(board, q + 1, r)
+    toggle_aux(board, q - 1, r + 1)
+    toggle_aux(board, q, r + 1)
 end
 
-function toggle_aux(q, r)
+function toggle_aux(board, q, r)
     if q >= 1 and q <= Q_MAX and r >= 1 and r <= R_MAX then
-        S.board[q][r] = not S.board[q][r]
+        board[q][r] = not board[q][r]
     end
 end
 
@@ -210,23 +214,26 @@ function hex_to_point(q, r)
         (r - 1) * HEX_VERTICAL_DISTANCE + BOARD_OFFSET_Y
 end
 
+
 --------------------------------------------------------------------------------
 -- Game end
 
-function mode_won()
-    handle_buttons_won()
+function mode_game_end()
+    handle_button_game_end()
     draw_board()
     print("Victory!!", 32, 48, 12, nil, 4)
     print("Press B to start again", 48, 80, 12)
 end
 
-function handle_buttons_won()
+function handle_button_game_end()
     if btnp(BUTTON_B) then start_game() end
 end
 
-function end_game()
-    S.mode = mode_won
-    S.selected = nil
+function get_game_end_state()
+    return {
+        mode = mode_game_end,
+        board = S.board
+    }
 end
 
 --------------------------------------------------------------------------------
@@ -238,6 +245,10 @@ function clamp(n, min, max)
     else return n
     end
 end
+
+
+--------------------------------------------------------------------------------
+-- Resources
 
 -- <TILES>
 -- 000:0000000000000000000000ff00000fff000fffff00ffffff00ffffff00ffffff
