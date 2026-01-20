@@ -7,71 +7,65 @@
 -- script:  lua
 -- input:   gamepad
 
--- luacheck: allow defined top
--- luacheck: ignore 131
--- luacheck: globals cls print spr
--- luacheck: globals btn btnp
-
 --------------------------------------------------------------------------------
 --
 -- Constants
 --
 
-BUTTON_UP    = 0
-BUTTON_DOWN  = 1
-BUTTON_LEFT  = 2
-BUTTON_RIGHT = 3
+BUTTON_UP             = 0
+BUTTON_DOWN           = 1
+BUTTON_LEFT           = 2
+BUTTON_RIGHT          = 3
 
-BUTTON_B = 5
+BUTTON_B              = 5
 
-DIRECTION_UP_LEFT    = 0
-DIRECTION_UP_RIGHT   = 1
-DIRECTION_RIGHT      = 2
-DIRECTION_DOWN_RIGHT = 3
-DIRECTION_DOWN_LEFT  = 4
-DIRECTION_LEFT       = 5
+DIRECTION_UP_LEFT     = 0
+DIRECTION_UP_RIGHT    = 1
+DIRECTION_RIGHT       = 2
+DIRECTION_DOWN_RIGHT  = 3
+DIRECTION_DOWN_LEFT   = 4
+DIRECTION_LEFT        = 5
 
 DIRECTION_TO_VELOCITY = {
-    [DIRECTION_UP_LEFT]    = { 0, -1},
-    [DIRECTION_UP_RIGHT]   = { 1, -1},
-    [DIRECTION_RIGHT]      = { 1,  0},
-    [DIRECTION_DOWN_RIGHT] = { 0,  1},
-    [DIRECTION_DOWN_LEFT]  = {-1,  1},
-    [DIRECTION_LEFT]       = {-1,  0}
+    [DIRECTION_UP_LEFT]    = { 0, -1 },
+    [DIRECTION_UP_RIGHT]   = { 1, -1 },
+    [DIRECTION_RIGHT]      = { 1, 0 },
+    [DIRECTION_DOWN_RIGHT] = { 0, 1 },
+    [DIRECTION_DOWN_LEFT]  = { -1, 1 },
+    [DIRECTION_LEFT]       = { -1, 0 }
 }
 
-Q_MAX = 11
-R_MAX = 11
+Q_MAX                 = 11
+R_MAX                 = 11
 
-HEX_WIDTH = 12
+HEX_WIDTH             = 12
 HEX_VERTICAL_DISTANCE = 9
 
-HEX_TILES = { [false] = 0, [true] = 2}
+HEX_TILES             = { [false] = 0, [true] = 2 }
 
-SELECT_SPRITE = 256
+SELECT_SPRITE         = 256
 
-BOARD_OFFSET_X = 32
-BOARD_OFFSET_Y = 24
+BOARD_OFFSET_X        = 32
+BOARD_OFFSET_Y        = 24
 
 
 --------------------------------------------------------------------------------
 -- Game state
 
-S = nil
+S = { mode = nil }
 
 
 --------------------------------------------------------------------------------
 -- TIC-80 Callbacks
 
-function BOOT()
+function _G.BOOT()
     S = { mode = mode_start }
 end
 
-function TIC()
+function _G.TIC()
     cls(7)
     S.mode()
 end
-
 
 --------------------------------------------------------------------------------
 -- Start screen
@@ -83,7 +77,6 @@ function mode_start()
         S = get_game_start_state()
     end
 end
-
 
 --------------------------------------------------------------------------------
 -- Game board
@@ -181,7 +174,7 @@ function move(direction)
     local q, r = table.unpack(S.selected)
     local velocity_q, velocity_r = table.unpack(DIRECTION_TO_VELOCITY[direction])
     q, r = q + velocity_q, r + velocity_r
-    S.selected = {clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX)}
+    S.selected = { clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX) }
 end
 
 function toggle(board, q, r)
@@ -218,7 +211,6 @@ function hex_to_point(q, r)
         (r - 1) * HEX_VERTICAL_DISTANCE + BOARD_OFFSET_Y
 end
 
-
 --------------------------------------------------------------------------------
 -- Game end
 
@@ -250,7 +242,6 @@ function clamp(n, min, max)
     if max < n then return max end
     return n
 end
-
 
 --------------------------------------------------------------------------------
 -- Resources
