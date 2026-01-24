@@ -1,4 +1,4 @@
--- title:   Hexlights
+x -- title:   Hexlights
 -- author:  Bjoern Lindstroem <bkhl@elektrubadur.se>
 -- desc:    Hexagonal lights out
 -- site:    https://github.com/bkhl/hexlights
@@ -109,6 +109,7 @@ function get_game_start_state()
     return {
         mode = mode_game,
         selected = { math.random(1, Q_MAX), math.random(1, R_MAX) },
+        directional_button_state = {},
         board = board
     }
 end
@@ -131,43 +132,75 @@ function draw_hex(s, q, r)
 end
 
 function handle_buttons_game(state)
-    --[[
-        Plan:
+    local q, r = table.unpack(state.selected)
 
-        A State machine? For starting state:
-          1 Each frame check btnp of all buttons and remember them.
-          2 If buttons are remembered from previous frame, check all buttons again
-            with btn, and trigger a move and go into "repeat" mode.
+    state.directional_button_state = handle_directional_buttons(
+        state.directional_button_state, r
+    )
 
-        B In repeat mode:
-          1 keep checking that the buttons for the current
-            directions are pressed and count until we should repeat the move.
-          2 also check all buttons with btnp. If any detected remember them and go back to A2
-
-        Have mechanism to allow "dropping" a button for one frame while in repeat mode?
-    --]]
-
-    local _, r = table.unpack(state.selected)
-
-    if (btnp(BUTTON_UP, 20, 10) and btn(BUTTON_LEFT) or (btnp(BUTTON_LEFT, 20, 10) and btn(BUTTON_UP))) then
-        move(state, DIRECTION_UP_LEFT)
-    elseif (btnp(BUTTON_UP, 20, 10) and btn(BUTTON_RIGHT) or (btnp(BUTTON_RIGHT, 20, 10) and btn(BUTTON_UP))) then
-        move(state, DIRECTION_UP_RIGHT)
-    elseif (btnp(BUTTON_DOWN, 20, 10) and btn(BUTTON_LEFT) or (btnp(BUTTON_LEFT, 20, 10) and btn(BUTTON_DOWN))) then
-        move(state, DIRECTION_DOWN_LEFT)
-    elseif (btnp(BUTTON_DOWN, 20, 10) and btn(BUTTON_RIGHT) or (btnp(BUTTON_RIGHT, 20, 10) and btn(BUTTON_DOWN))) then
-        move(state, DIRECTION_DOWN_RIGHT)
-    elseif btnp(BUTTON_UP, 20, 10) then
-        move(state, r % 2 == 0 and DIRECTION_UP_LEFT or DIRECTION_UP_RIGHT)
-    elseif btnp(BUTTON_LEFT, 20, 10) then
-        move(state, DIRECTION_LEFT)
-    elseif btnp(BUTTON_DOWN, 20, 10) then
-        move(state, r % 2 == 0 and DIRECTION_DOWN_LEFT or DIRECTION_DOWN_RIGHT)
-    elseif btnp(BUTTON_RIGHT, 20, 10) then
-        move(state, DIRECTION_RIGHT)
+    if state.directional_button_state.move then
+        move(state, state.directional_button_state.direction)
     end
 
-    if btnp(BUTTON_B) then toggle(state.board, table.unpack(state.selected)) end
+    if btnp(BUTTON_B) then
+        toggle(state.board, q, r)
+    end
+end
+
+function handle_directional_buttons(button_state, r)
+    local up = btn(BUTTON_UP)
+    local down = btn(BUTTON_DOWN)
+    local left = btn(BUTTON_LEFT)
+    local right = btn(BUTTON_RIGHT)
+
+    if up and down then
+        up, down = nil, nil
+    end
+
+    if left and right then
+        left, right = nil, nil
+    end
+
+    if not (up or down or left or right) then
+        return {}, nil
+    end
+
+    local direction
+    -- TODO: Only allow "slipping" on diagonal for one frame.
+    if (up and left) or ((up or right) and button_state.direction == DIRECTION_UP_LEFT) then
+        direction = DIRECTION_UP_LEFT
+    elseif (up and right) or ((up or right) and button_state.direction == DIRECTION_UP_RIGHT) then
+        direction = DIRECTION_UP_RIGHT
+    elseif (down and left) or ((down or left) and button_state.direction == DIRECTION_DOWN_LEFT) then
+        direction = DIRECTION_DOWN_LEFT
+    elseif (down and right) or ((down or right) and button_state.direction == DIRECTION_DOWN_RIGHT) then
+        direction = DIRECTION_DOWN_RIGHT
+    elseif up then
+        direction = r % 2 == 0 and DIRECTION_UP_LEFT or DIRECTION_UP_RIGHT
+    elseif down then
+        direction = r % 2 == 0 and DIRECTION_DOWN_LEFT or DIRECTION_DOWN_RIGHT
+    elseif left then
+        direction = DIRECTION_LEFT
+    elseif right then
+        direction = DIRECTION_RIGHT
+    end
+
+    local counter = (button_state.counter or 0)
+    if counter == 31 then
+        counter = 21
+    end
+
+    return {
+        counter = counter + 1,
+        prev = {
+            up = up,
+            down = down,
+            left = left,
+            right = right
+        },
+        direction = direction,
+        move = counter == 1 or counter == 21,
+    }
 end
 
 function move(state, direction)
