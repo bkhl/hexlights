@@ -101,7 +101,7 @@ function get_game_start_state()
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
             if math.random(0, 1) == 1 then
-                toggle(board, { q, r })
+                toggle(board, q, r)
             end
         end
     end
@@ -116,17 +116,17 @@ end
 function draw_board(state)
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
-            draw_hex(HEX_TILES[state.board[q][r]], { q, r })
+            draw_hex(HEX_TILES[state.board[q][r]], q, r)
         end
     end
 
     if state.selected then
-        draw_hex(SELECT_SPRITE, state.selected)
+        draw_hex(SELECT_SPRITE, table.unpack(state.selected))
     end
 end
 
-function draw_hex(s, h)
-    local x, y = table.unpack(hex_to_point(h))
+function draw_hex(s, q, r)
+    local x, y = hex_to_point(q, r)
     spr(s, (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
 end
 
@@ -167,7 +167,7 @@ function handle_buttons_game(state)
         move(state, DIRECTION_RIGHT)
     end
 
-    if btnp(BUTTON_B) then toggle(state.board, state.selected) end
+    if btnp(BUTTON_B) then toggle(state.board, table.unpack(state.selected)) end
 end
 
 function move(state, direction)
@@ -177,8 +177,7 @@ function move(state, direction)
     state.selected = { clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX) }
 end
 
-function toggle(board, h)
-    local q, r = table.unpack(h)
+function toggle(board, q, r)
     toggle_aux(board, q, r - 1)
     toggle_aux(board, q + 1, r - 1)
     toggle_aux(board, q - 1, r)
@@ -206,12 +205,10 @@ function game_won(state)
     return true
 end
 
-function hex_to_point(h)
-    local q, r = table.unpack(h)
-    return {
+function hex_to_point(q, r)
+    return
         (q - 1) * HEX_WIDTH + (r - 1) * (HEX_WIDTH // 2) + BOARD_OFFSET_X,
-        (r - 1) * HEX_VERTICAL_DISTANCE + BOARD_OFFSET_Y,
-    }
+        (r - 1) * HEX_VERTICAL_DISTANCE + BOARD_OFFSET_Y
 end
 
 --------------------------------------------------------------------------------
