@@ -82,11 +82,11 @@ end
 -- Game board
 
 function mode_game()
-    handle_buttons_game()
+    handle_buttons_game(S)
 
-    if game_won() then S = get_game_end_state() end
+    if game_won(S) then S = get_game_end_state(S) end
 
-    draw_board()
+    draw_board(S)
 end
 
 function get_game_start_state()
@@ -101,7 +101,7 @@ function get_game_start_state()
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
             if math.random(0, 1) == 1 then
-                toggle(board, q, r)
+                toggle(board, { q, r })
             end
         end
     end
@@ -113,26 +113,24 @@ function get_game_start_state()
     }
 end
 
-function draw_board()
+function draw_board(state)
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
-            draw_hex(HEX_TILES[S.board[q][r]], q, r)
+            draw_hex(HEX_TILES[state.board[q][r]], { q, r })
         end
     end
 
-    if S.selected then
-        draw_hex(SELECT_SPRITE, table.unpack(S.selected))
+    if state.selected then
+        draw_hex(SELECT_SPRITE, state.selected)
     end
 end
 
-function draw_hex(s, q, r)
-    local x, y = hex_to_point(q, r)
+function draw_hex(s, h)
+    local x, y = table.unpack(hex_to_point(h))
     spr(s, (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
 end
 
-function handle_buttons_game()
-    local q, r = table.unpack(S.selected)
-
+function handle_buttons_game(state)
     --[[
         Plan:
 
@@ -149,35 +147,38 @@ function handle_buttons_game()
         Have mechanism to allow "dropping" a button for one frame while in repeat mode?
     --]]
 
+    local _, r = table.unpack(state.selected)
+
     if (btnp(BUTTON_UP, 20, 10) and btn(BUTTON_LEFT) or (btnp(BUTTON_LEFT, 20, 10) and btn(BUTTON_UP))) then
-        move(DIRECTION_UP_LEFT)
+        move(state, DIRECTION_UP_LEFT)
     elseif (btnp(BUTTON_UP, 20, 10) and btn(BUTTON_RIGHT) or (btnp(BUTTON_RIGHT, 20, 10) and btn(BUTTON_UP))) then
-        move(DIRECTION_UP_RIGHT)
+        move(state, DIRECTION_UP_RIGHT)
     elseif (btnp(BUTTON_DOWN, 20, 10) and btn(BUTTON_LEFT) or (btnp(BUTTON_LEFT, 20, 10) and btn(BUTTON_DOWN))) then
-        move(DIRECTION_DOWN_LEFT)
+        move(state, DIRECTION_DOWN_LEFT)
     elseif (btnp(BUTTON_DOWN, 20, 10) and btn(BUTTON_RIGHT) or (btnp(BUTTON_RIGHT, 20, 10) and btn(BUTTON_DOWN))) then
-        move(DIRECTION_DOWN_RIGHT)
+        move(state, DIRECTION_DOWN_RIGHT)
     elseif btnp(BUTTON_UP, 20, 10) then
-        move(r % 2 == 0 and DIRECTION_UP_LEFT or DIRECTION_UP_RIGHT)
+        move(state, r % 2 == 0 and DIRECTION_UP_LEFT or DIRECTION_UP_RIGHT)
     elseif btnp(BUTTON_LEFT, 20, 10) then
-        move(DIRECTION_LEFT)
+        move(state, DIRECTION_LEFT)
     elseif btnp(BUTTON_DOWN, 20, 10) then
-        move(r % 2 == 0 and DIRECTION_DOWN_LEFT or DIRECTION_DOWN_RIGHT)
+        move(state, r % 2 == 0 and DIRECTION_DOWN_LEFT or DIRECTION_DOWN_RIGHT)
     elseif btnp(BUTTON_RIGHT, 20, 10) then
-        move(DIRECTION_RIGHT)
+        move(state, DIRECTION_RIGHT)
     end
 
-    if btnp(BUTTON_B) then toggle(S.board, q, r) end
+    if btnp(BUTTON_B) then toggle(state.board, state.selected) end
 end
 
-function move(direction)
-    local q, r = table.unpack(S.selected)
+function move(state, direction)
+    local q, r = table.unpack(state.selected)
     local velocity_q, velocity_r = table.unpack(DIRECTION_TO_VELOCITY[direction])
     q, r = q + velocity_q, r + velocity_r
-    S.selected = { clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX) }
+    state.selected = { clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX) }
 end
 
-function toggle(board, q, r)
+function toggle(board, h)
+    local q, r = table.unpack(h)
     toggle_aux(board, q, r - 1)
     toggle_aux(board, q + 1, r - 1)
     toggle_aux(board, q - 1, r)
@@ -193,10 +194,10 @@ function toggle_aux(board, q, r)
     end
 end
 
-function game_won()
+function game_won(state)
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
-            if S.board[q][r] == true then
+            if state.board[q][r] == true then
                 return false
             end
         end
@@ -205,10 +206,12 @@ function game_won()
     return true
 end
 
-function hex_to_point(q, r)
-    return
+function hex_to_point(h)
+    local q, r = table.unpack(h)
+    return {
         (q - 1) * HEX_WIDTH + (r - 1) * (HEX_WIDTH // 2) + BOARD_OFFSET_X,
-        (r - 1) * HEX_VERTICAL_DISTANCE + BOARD_OFFSET_Y
+        (r - 1) * HEX_VERTICAL_DISTANCE + BOARD_OFFSET_Y,
+    }
 end
 
 --------------------------------------------------------------------------------
@@ -216,7 +219,7 @@ end
 
 function mode_game_end()
     handle_button_game_end()
-    draw_board()
+    draw_board(S)
     print("Victory!!", 32, 48, 12, nil, 4)
     print("Press B to start again", 48, 80, 12)
 end
@@ -227,10 +230,10 @@ function handle_button_game_end()
     end
 end
 
-function get_game_end_state()
+function get_game_end_state(state)
     return {
         mode = mode_game_end,
-        board = S.board
+        board = state.board
     }
 end
 
