@@ -1,4 +1,4 @@
-x -- title:   Hexlights
+-- title:   Hexlights
 -- author:  Bjoern Lindstroem <bkhl@elektrubadur.se>
 -- desc:    Hexagonal lights out
 -- site:    https://github.com/bkhl/hexlights
@@ -135,7 +135,8 @@ function handle_buttons_game(state)
     local q, r = table.unpack(state.selected)
 
     state.directional_button_state = handle_directional_buttons(
-        state.directional_button_state, r
+        state.directional_button_state,
+        r % 2 == 0
     )
 
     if state.directional_button_state.move then
@@ -147,7 +148,7 @@ function handle_buttons_game(state)
     end
 end
 
-function handle_directional_buttons(button_state, r)
+function handle_directional_buttons(state, even_row)
     local up = btn(BUTTON_UP)
     local down = btn(BUTTON_DOWN)
     local left = btn(BUTTON_LEFT)
@@ -165,30 +166,32 @@ function handle_directional_buttons(button_state, r)
         return {}, nil
     end
 
-    local direction
-    -- TODO: Only allow "slipping" on diagonal for one frame.
-    if (up and left) or ((up or right) and button_state.direction == DIRECTION_UP_LEFT) then
+    local prev = state.prev or {}
+
+    if (up and left) or ((up or right) and (prev.up and prev.left)) then
         direction = DIRECTION_UP_LEFT
-    elseif (up and right) or ((up or right) and button_state.direction == DIRECTION_UP_RIGHT) then
+    elseif (up and right) or ((up or right) and (prev.up and prev.right)) then
         direction = DIRECTION_UP_RIGHT
-    elseif (down and left) or ((down or left) and button_state.direction == DIRECTION_DOWN_LEFT) then
+    elseif (down and left) or ((down or left) and (prev.down and prev.left)) then
         direction = DIRECTION_DOWN_LEFT
-    elseif (down and right) or ((down or right) and button_state.direction == DIRECTION_DOWN_RIGHT) then
+    elseif (down and right) or ((down or right) and (prev.down and prev.right)) then
         direction = DIRECTION_DOWN_RIGHT
     elseif up then
-        direction = r % 2 == 0 and DIRECTION_UP_LEFT or DIRECTION_UP_RIGHT
+        direction = even_row and DIRECTION_UP_LEFT or DIRECTION_UP_RIGHT
     elseif down then
-        direction = r % 2 == 0 and DIRECTION_DOWN_LEFT or DIRECTION_DOWN_RIGHT
+        direction = even_row and DIRECTION_DOWN_LEFT or DIRECTION_DOWN_RIGHT
     elseif left then
         direction = DIRECTION_LEFT
     elseif right then
         direction = DIRECTION_RIGHT
     end
 
-    local counter = (button_state.counter or 0)
+    local counter = (state.counter or 0)
     if counter == 31 then
         counter = 21
     end
+
+    -- TODO: Trigger move if buttons were pressed a single frame only
 
     return {
         counter = counter + 1,
