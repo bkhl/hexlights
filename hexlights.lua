@@ -7,26 +7,28 @@
 -- script:  lua
 -- input:   gamepad
 
+local M                     = {}
+
 --------------------------------------------------------------------------------
 --
 -- Constants
 --
 
-BUTTON_UP             = 0
-BUTTON_DOWN           = 1
-BUTTON_LEFT           = 2
-BUTTON_RIGHT          = 3
+local BUTTON_UP             = 0
+local BUTTON_DOWN           = 1
+local BUTTON_LEFT           = 2
+local BUTTON_RIGHT          = 3
 
-BUTTON_B              = 5
+local BUTTON_B              = 5
 
-DIRECTION_UP_LEFT     = 0
-DIRECTION_UP_RIGHT    = 1
-DIRECTION_RIGHT       = 2
-DIRECTION_DOWN_RIGHT  = 3
-DIRECTION_DOWN_LEFT   = 4
-DIRECTION_LEFT        = 5
+local DIRECTION_UP_LEFT     = 0
+local DIRECTION_UP_RIGHT    = 1
+local DIRECTION_RIGHT       = 2
+local DIRECTION_DOWN_RIGHT  = 3
+local DIRECTION_DOWN_LEFT   = 4
+local DIRECTION_LEFT        = 5
 
-DIRECTION_TO_VELOCITY = {
+local DIRECTION_TO_VELOCITY = {
     [DIRECTION_UP_LEFT]    = { 0, -1 },
     [DIRECTION_UP_RIGHT]   = { 1, -1 },
     [DIRECTION_RIGHT]      = { 1, 0 },
@@ -35,61 +37,55 @@ DIRECTION_TO_VELOCITY = {
     [DIRECTION_LEFT]       = { -1, 0 }
 }
 
-Q_MAX                 = 11
-R_MAX                 = 11
+local Q_MAX                 = 11
+local R_MAX                 = 11
 
-HEX_WIDTH             = 12
-HEX_VERTICAL_DISTANCE = 9
+local HEX_WIDTH             = 12
+local HEX_VERTICAL_DISTANCE = 9
 
-HEX_TILES             = { [false] = 0, [true] = 2 }
+local HEX_TILES             = { [false] = 0, [true] = 2 }
 
-SELECT_SPRITE         = 256
+local SELECT_SPRITE         = 256
 
-BOARD_OFFSET_X        = 32
-BOARD_OFFSET_Y        = 24
-
-
---------------------------------------------------------------------------------
--- Game state
-
-S = {}
+local BOARD_OFFSET_X        = 32
+local BOARD_OFFSET_Y        = 24
 
 
 --------------------------------------------------------------------------------
 -- TIC-80 Callbacks
 
 function _G.BOOT()
-    S = { mode = mode_start }
+    _G.state = { mode = M.mode_start }
 end
 
 function _G.TIC()
     cls(7)
-    S.mode()
+    _G.state.mode()
 end
 
 --------------------------------------------------------------------------------
 -- Start screen
 
-function mode_start()
+function M.mode_start()
     print("Press B to start", 32, 48, 12, nil, 2)
 
     if btnp(BUTTON_B) then
-        S = get_game_start_state()
+        _G.state = M.get_game_start_state()
     end
 end
 
 --------------------------------------------------------------------------------
 -- Game board
 
-function mode_game()
-    handle_buttons_game(S)
+function M.mode_game()
+    M.handle_buttons_game(_G.state)
 
-    if game_won(S) then S = get_game_end_state(S) end
+    if M.game_won(_G.state) then _G.state = M.get_game_end_state(_G.state) end
 
-    draw_board(S)
+    M.draw_board(_G.state)
 end
 
-function get_game_start_state()
+function M.get_game_start_state()
     local board = {}
     for q = 1, Q_MAX do
         board[q] = {}
@@ -101,54 +97,54 @@ function get_game_start_state()
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
             if math.random(0, 1) == 1 then
-                toggle(board, q, r)
+                M.toggle(board, q, r)
             end
         end
     end
 
     return {
-        mode = mode_game,
+        mode = M.mode_game,
         selected = { math.random(1, Q_MAX), math.random(1, R_MAX) },
         directional_button_state = {},
         board = board
     }
 end
 
-function draw_board(state)
+function M.draw_board(state)
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
-            draw_hex(HEX_TILES[state.board[q][r]], q, r)
+            M.draw_hex(HEX_TILES[state.board[q][r]], q, r)
         end
     end
 
     if state.selected then
-        draw_hex(SELECT_SPRITE, table.unpack(state.selected))
+        M.draw_hex(SELECT_SPRITE, table.unpack(state.selected))
     end
 end
 
-function draw_hex(s, q, r)
-    local x, y = hex_to_point(q, r)
+function M.draw_hex(s, q, r)
+    local x, y = M.hex_to_point(q, r)
     spr(s, (x - 8), (y - 8), 0, 1, 0, 0, 2, 2)
 end
 
-function handle_buttons_game(state)
+function M.handle_buttons_game(state)
     local q, r = table.unpack(state.selected)
 
-    state.directional_button_state = handle_directional_buttons(
+    state.directional_button_state = M.handle_directional_buttons(
         state.directional_button_state,
         r % 2 == 0
     )
 
     if state.directional_button_state.move then
-        move(state, state.directional_button_state.direction)
+        M.move(state, state.directional_button_state.direction)
     end
 
     if btnp(BUTTON_B) then
-        toggle(state.board, q, r)
+        M.toggle(state.board, q, r)
     end
 end
 
-function handle_directional_buttons(state, even_row)
+function M.handle_directional_buttons(state, even_row)
     local curr = {
         up = btn(BUTTON_UP),
         down = btn(BUTTON_DOWN),
@@ -169,7 +165,7 @@ function handle_directional_buttons(state, even_row)
 
     if not (curr.up or curr.down or curr.left or curr.right) then
         if counter == 1 and (prev.up or prev.down or prev.left or prev.right) then
-            local direction = get_direction(prev, {}, even_row)
+            local direction = M.get_direction(prev, {}, even_row)
             return {
                 direction = direction,
                 move = true,
@@ -178,7 +174,7 @@ function handle_directional_buttons(state, even_row)
         return {}, nil
     end
 
-    local direction = get_direction(curr, prev, even_row)
+    local direction = M.get_direction(curr, prev, even_row)
 
     if counter == 31 then
         counter = 21
@@ -192,7 +188,7 @@ function handle_directional_buttons(state, even_row)
     }
 end
 
-function get_direction(curr, prev, even_row)
+function M.get_direction(curr, prev, even_row)
     if (curr.up and curr.left) or ((curr.up or curr.right) and (prev.up and prev.left)) then
         return DIRECTION_UP_LEFT
     elseif (curr.up and curr.right) or ((curr.up or curr.right) and (prev.up and prev.right)) then
@@ -212,30 +208,30 @@ function get_direction(curr, prev, even_row)
     end
 end
 
-function move(state, direction)
+function M.move(state, direction)
     local q, r = table.unpack(state.selected)
     local velocity_q, velocity_r = table.unpack(DIRECTION_TO_VELOCITY[direction])
     q, r = q + velocity_q, r + velocity_r
-    state.selected = { clamp(q, 1, Q_MAX), clamp(r, 1, R_MAX) }
+    state.selected = { M.clamp(q, 1, Q_MAX), M.clamp(r, 1, R_MAX) }
 end
 
-function toggle(board, q, r)
-    toggle_aux(board, q, r - 1)
-    toggle_aux(board, q + 1, r - 1)
-    toggle_aux(board, q - 1, r)
-    toggle_aux(board, q, r)
-    toggle_aux(board, q + 1, r)
-    toggle_aux(board, q - 1, r + 1)
-    toggle_aux(board, q, r + 1)
+function M.toggle(board, q, r)
+    M.toggle_aux(board, q, r - 1)
+    M.toggle_aux(board, q + 1, r - 1)
+    M.toggle_aux(board, q - 1, r)
+    M.toggle_aux(board, q, r)
+    M.toggle_aux(board, q + 1, r)
+    M.toggle_aux(board, q - 1, r + 1)
+    M.toggle_aux(board, q, r + 1)
 end
 
-function toggle_aux(board, q, r)
+function M.toggle_aux(board, q, r)
     if q >= 1 and q <= Q_MAX and r >= 1 and r <= R_MAX then
         board[q][r] = not board[q][r]
     end
 end
 
-function game_won(state)
+function M.game_won(state)
     for q = 1, Q_MAX do
         for r = 1, R_MAX do
             if state.board[q][r] == true then
@@ -247,7 +243,7 @@ function game_won(state)
     return true
 end
 
-function hex_to_point(q, r)
+function M.hex_to_point(q, r)
     return
         (q - 1) * HEX_WIDTH + (r - 1) * (HEX_WIDTH // 2) + BOARD_OFFSET_X,
         (r - 1) * HEX_VERTICAL_DISTANCE + BOARD_OFFSET_Y
@@ -256,22 +252,22 @@ end
 --------------------------------------------------------------------------------
 -- Game end
 
-function mode_game_end()
-    handle_button_game_end()
-    draw_board(S)
+function M.mode_game_end()
+    M.handle_button_game_end()
+    M.draw_board(_G.state)
     print("Victory!!", 32, 48, 12, nil, 4)
     print("Press B to start again", 48, 80, 12)
 end
 
-function handle_button_game_end()
+function M.handle_button_game_end()
     if btnp(BUTTON_B) then
-        S = get_game_start_state()
+        _G.state = M.get_game_start_state()
     end
 end
 
-function get_game_end_state(state)
+function M.get_game_end_state(state)
     return {
-        mode = mode_game_end,
+        mode = M.mode_game_end,
         board = state.board
     }
 end
@@ -279,11 +275,16 @@ end
 --------------------------------------------------------------------------------
 -- Utilities
 
-function clamp(n, min, max)
+function M.clamp(n, min, max)
     if n < min then return min end
     if max < n then return max end
     return n
 end
+
+--------------------------------------------------------------------------------
+-- Return module table for tests
+
+return M
 
 --------------------------------------------------------------------------------
 -- Resources

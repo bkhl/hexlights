@@ -1,7 +1,6 @@
 -- -*- mode: lua -*-
 
 return {
-    allow_defined_top = true,
     std = {
         globals = {
             "_G",

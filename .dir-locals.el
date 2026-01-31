@@ -13,7 +13,6 @@
                         (:workspace
                          (:library ["${3rd}/tic80"
                                     "${3rd}/luassert"
-                                    "${3rd}/busted"])
-                         :diagnostics (:disable ["lowercase-global"]))))
+                                    "${3rd}/busted"]))))
           (add-hook 'before-save-hook #'eglot-format-buffer nil t)
           (eglot-ensure))))))

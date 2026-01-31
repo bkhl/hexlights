@@ -1,0 +1,3 @@
+#+TITLE: Hexlights
+
+This is an implementation of [[https://en.wikipedia.org/wiki/Lights_Out_(game)][Lights Out]] on an hexagonal board, made to experiment with a few things in [[https://tic80.com/][TIC-80]].
