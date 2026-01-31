@@ -149,63 +149,65 @@ function handle_buttons_game(state)
 end
 
 function handle_directional_buttons(state, even_row)
-    local up = btn(BUTTON_UP)
-    local down = btn(BUTTON_DOWN)
-    local left = btn(BUTTON_LEFT)
-    local right = btn(BUTTON_RIGHT)
+    local curr = {
+        up = btn(BUTTON_UP),
+        down = btn(BUTTON_DOWN),
+        left = btn(BUTTON_LEFT),
+        right = btn(BUTTON_RIGHT),
+    }
 
-    if up and down then
-        up, down = nil, nil
+    if curr.up and curr.down then
+        curr.up, curr.down = nil, nil
     end
 
-    if left and right then
-        left, right = nil, nil
+    if curr.left and curr.right then
+        curr.left, curr.right = nil, nil
     end
 
-    if not (up or down or left or right) then
+    local counter = (state.counter or 0)
+    local prev = state.prev or {}
+
+    if not (curr.up or curr.down or curr.left or curr.right) then
+        if counter == 1 and (prev.up or prev.down or prev.left or prev.right) then
+            local direction = get_direction(prev, {}, even_row)
+            return {
+                direction = direction,
+                move = true,
+            }
+        end
         return {}, nil
     end
 
-    local prev = state.prev or {}
+    local direction = get_direction(curr, prev, even_row)
 
-    local direction = get_direction(up, down, left, right, prev, even_row)
-
-    local counter = (state.counter or 0)
     if counter == 31 then
         counter = 21
     end
 
-    -- TODO: Trigger move if buttons were pressed a single frame only
-
     return {
         counter = counter + 1,
-        prev = {
-            up = up,
-            down = down,
-            left = left,
-            right = right
-        },
+        prev = curr,
         direction = direction,
         move = counter == 1 or counter == 21,
     }
 end
 
-function get_direction(up, down, left, right, prev, even_row)
-    if (up and left) or ((up or right) and (prev.up and prev.left)) then
+function get_direction(curr, prev, even_row)
+    if (curr.up and curr.left) or ((curr.up or curr.right) and (prev.up and prev.left)) then
         return DIRECTION_UP_LEFT
-    elseif (up and right) or ((up or right) and (prev.up and prev.right)) then
+    elseif (curr.up and curr.right) or ((curr.up or curr.right) and (prev.up and prev.right)) then
         return DIRECTION_UP_RIGHT
-    elseif (down and left) or ((down or left) and (prev.down and prev.left)) then
+    elseif (curr.down and curr.left) or ((curr.down or curr.left) and (prev.down and prev.left)) then
         return DIRECTION_DOWN_LEFT
-    elseif (down and right) or ((down or right) and (prev.down and prev.right)) then
+    elseif (curr.down and curr.right) or ((curr.down or curr.right) and (prev.down and prev.right)) then
         return DIRECTION_DOWN_RIGHT
-    elseif up then
+    elseif curr.up then
         return even_row and DIRECTION_UP_LEFT or DIRECTION_UP_RIGHT
-    elseif down then
+    elseif curr.down then
         return even_row and DIRECTION_DOWN_LEFT or DIRECTION_DOWN_RIGHT
-    elseif left then
+    elseif curr.left then
         return DIRECTION_LEFT
-    elseif right then
+    elseif curr.right then
         return DIRECTION_RIGHT
     end
 end
