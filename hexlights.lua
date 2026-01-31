@@ -7,28 +7,28 @@
 -- script:  lua
 -- input:   gamepad
 
-local M                     = {}
+local M                      = {}
 
 --------------------------------------------------------------------------------
 --
 -- Constants
 --
 
-local BUTTON_UP             = 0
-local BUTTON_DOWN           = 1
-local BUTTON_LEFT           = 2
-local BUTTON_RIGHT          = 3
+local BUTTON_UP              = 0
+local BUTTON_DOWN            = 1
+local BUTTON_LEFT            = 2
+local BUTTON_RIGHT           = 3
 
-local BUTTON_B              = 5
+local BUTTON_B               = 5
 
-local DIRECTION_UP_LEFT     = 0
-local DIRECTION_UP_RIGHT    = 1
-local DIRECTION_RIGHT       = 2
-local DIRECTION_DOWN_RIGHT  = 3
-local DIRECTION_DOWN_LEFT   = 4
-local DIRECTION_LEFT        = 5
+local DIRECTION_UP_LEFT      = 0
+local DIRECTION_UP_RIGHT     = 1
+local DIRECTION_RIGHT        = 2
+local DIRECTION_DOWN_RIGHT   = 3
+local DIRECTION_DOWN_LEFT    = 4
+local DIRECTION_LEFT         = 5
 
-local DIRECTION_TO_VELOCITY = {
+local DIRECTION_TO_VELOCITY  = {
     [DIRECTION_UP_LEFT]    = { 0, -1 },
     [DIRECTION_UP_RIGHT]   = { 1, -1 },
     [DIRECTION_RIGHT]      = { 1, 0 },
@@ -37,18 +37,22 @@ local DIRECTION_TO_VELOCITY = {
     [DIRECTION_LEFT]       = { -1, 0 }
 }
 
-local Q_MAX                 = 11
-local R_MAX                 = 11
+local BUTTON_REPEAT_DELAY    = 20
+local BUTTON_REPEAT_INTERVAL = 10
+local INPUT_BUFFER_SIZE      = 4
 
-local HEX_WIDTH             = 12
-local HEX_VERTICAL_DISTANCE = 9
+local Q_MAX                  = 11
+local R_MAX                  = 11
 
-local HEX_TILES             = { [false] = 0, [true] = 2 }
+local HEX_WIDTH              = 12
+local HEX_VERTICAL_DISTANCE  = 9
 
-local SELECT_SPRITE         = 256
+local HEX_TILES              = { [false] = 0, [true] = 2 }
 
-local BOARD_OFFSET_X        = 32
-local BOARD_OFFSET_Y        = 24
+local SELECT_SPRITE          = 256
+
+local BOARD_OFFSET_X         = 32
+local BOARD_OFFSET_Y         = 24
 
 
 --------------------------------------------------------------------------------
@@ -105,7 +109,7 @@ function M.get_game_start_state()
     return {
         mode = M.mode_game,
         selected = { math.random(1, Q_MAX), math.random(1, R_MAX) },
-        directional_button_state = {},
+        direction_input_buffer = {},
         board = board
     }
 end
@@ -130,13 +134,14 @@ end
 function M.handle_buttons_game(state)
     local q, r = table.unpack(state.selected)
 
-    state.directional_button_state = M.handle_directional_buttons(
-        state.directional_button_state,
+    local move_direction
+    state.direction_input_buffer, move_direction = M.handle_directional_buttons(
+        state.direction_input_buffer,
         r % 2 == 0
     )
 
-    if state.directional_button_state.move then
-        M.move(state, state.directional_button_state.direction)
+    if move_direction then
+        M.move(state, move_direction)
     end
 
     if btnp(BUTTON_B) then
@@ -144,66 +149,80 @@ function M.handle_buttons_game(state)
     end
 end
 
-function M.handle_directional_buttons(state, even_row)
-    local curr = {
+function M.handle_directional_buttons(input_buffer, even_row)
+    input_buffer.i = (input_buffer.i and input_buffer.i ~= INPUT_BUFFER_SIZE)
+        and (input_buffer.i + 1)
+        or 1
+
+    input_buffer[input_buffer.i] = {
         up = btn(BUTTON_UP),
         down = btn(BUTTON_DOWN),
         left = btn(BUTTON_LEFT),
         right = btn(BUTTON_RIGHT),
     }
 
-    if curr.up and curr.down then
-        curr.up, curr.down = nil, nil
+    input_buffer.filled = input_buffer.filled or (input_buffer.i == INPUT_BUFFER_SIZE)
+
+    if not input_buffer.filled then
+        return input_buffer, nil
     end
 
-    if curr.left and curr.right then
-        curr.left, curr.right = nil, nil
+    local up, down, left, right
+    for j = 1, INPUT_BUFFER_SIZE do
+        if input_buffer[j].up then up = true end
+        if input_buffer[j].down then down = true end
+        if input_buffer[j].left then left = true end
+        if input_buffer[j].right then right = true end
     end
 
-    local counter = (state.counter or 0)
-    local prev = state.prev or {}
+    if up and down then
+        up = false
+        down = false
+    end
 
-    if not (curr.up or curr.down or curr.left or curr.right) then
-        if counter == 1 and (prev.up or prev.down or prev.left or prev.right) then
-            local direction = M.get_direction(prev, {}, even_row)
-            return {
-                direction = direction,
-                move = true,
-            }
-        end
+    if left and right then
+        left = false
+        right = false
+    end
+
+    local direction = M.get_direction(up, down, left, right, even_row)
+
+    if not direction then
         return {}, nil
     end
 
-    local direction = M.get_direction(curr, prev, even_row)
-
-    if counter == 31 then
-        counter = 21
+    local move_direction
+    if input_buffer.counter then
+        if input_buffer.counter == BUTTON_REPEAT_DELAY then
+            move_direction = direction
+            input_buffer.counter = BUTTON_REPEAT_DELAY - BUTTON_REPEAT_INTERVAL
+        end
+    else
+        move_direction = direction
+        input_buffer.counter = 0
     end
 
-    return {
-        counter = counter + 1,
-        prev = curr,
-        direction = direction,
-        move = counter == 1 or counter == 21,
-    }
+    input_buffer.counter = input_buffer.counter + 1
+
+    return input_buffer, move_direction
 end
 
-function M.get_direction(curr, prev, even_row)
-    if (curr.up and curr.left) or ((curr.up or curr.right) and (prev.up and prev.left)) then
+function M.get_direction(up, down, left, right, even_row)
+    if (up and left) then
         return DIRECTION_UP_LEFT
-    elseif (curr.up and curr.right) or ((curr.up or curr.right) and (prev.up and prev.right)) then
+    elseif (up and right) then
         return DIRECTION_UP_RIGHT
-    elseif (curr.down and curr.left) or ((curr.down or curr.left) and (prev.down and prev.left)) then
+    elseif (down and left) then
         return DIRECTION_DOWN_LEFT
-    elseif (curr.down and curr.right) or ((curr.down or curr.right) and (prev.down and prev.right)) then
+    elseif (down and right) then
         return DIRECTION_DOWN_RIGHT
-    elseif curr.up then
+    elseif up then
         return even_row and DIRECTION_UP_LEFT or DIRECTION_UP_RIGHT
-    elseif curr.down then
+    elseif down then
         return even_row and DIRECTION_DOWN_LEFT or DIRECTION_DOWN_RIGHT
-    elseif curr.left then
+    elseif left then
         return DIRECTION_LEFT
-    elseif curr.right then
+    elseif right then
         return DIRECTION_RIGHT
     end
 end
