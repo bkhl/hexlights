@@ -168,23 +168,7 @@ function handle_directional_buttons(state, even_row)
 
     local prev = state.prev or {}
 
-    if (up and left) or ((up or right) and (prev.up and prev.left)) then
-        direction = DIRECTION_UP_LEFT
-    elseif (up and right) or ((up or right) and (prev.up and prev.right)) then
-        direction = DIRECTION_UP_RIGHT
-    elseif (down and left) or ((down or left) and (prev.down and prev.left)) then
-        direction = DIRECTION_DOWN_LEFT
-    elseif (down and right) or ((down or right) and (prev.down and prev.right)) then
-        direction = DIRECTION_DOWN_RIGHT
-    elseif up then
-        direction = even_row and DIRECTION_UP_LEFT or DIRECTION_UP_RIGHT
-    elseif down then
-        direction = even_row and DIRECTION_DOWN_LEFT or DIRECTION_DOWN_RIGHT
-    elseif left then
-        direction = DIRECTION_LEFT
-    elseif right then
-        direction = DIRECTION_RIGHT
-    end
+    local direction = get_direction(up, down, left, right, prev, even_row)
 
     local counter = (state.counter or 0)
     if counter == 31 then
@@ -204,6 +188,26 @@ function handle_directional_buttons(state, even_row)
         direction = direction,
         move = counter == 1 or counter == 21,
     }
+end
+
+function get_direction(up, down, left, right, prev, even_row)
+    if (up and left) or ((up or right) and (prev.up and prev.left)) then
+        return DIRECTION_UP_LEFT
+    elseif (up and right) or ((up or right) and (prev.up and prev.right)) then
+        return DIRECTION_UP_RIGHT
+    elseif (down and left) or ((down or left) and (prev.down and prev.left)) then
+        return DIRECTION_DOWN_LEFT
+    elseif (down and right) or ((down or right) and (prev.down and prev.right)) then
+        return DIRECTION_DOWN_RIGHT
+    elseif up then
+        return even_row and DIRECTION_UP_LEFT or DIRECTION_UP_RIGHT
+    elseif down then
+        return even_row and DIRECTION_DOWN_LEFT or DIRECTION_DOWN_RIGHT
+    elseif left then
+        return DIRECTION_LEFT
+    elseif right then
+        return DIRECTION_RIGHT
+    end
 end
 
 function move(state, direction)
