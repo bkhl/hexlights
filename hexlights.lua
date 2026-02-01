@@ -135,6 +135,7 @@ end
 function M.handle_buttons_game(state)
     local q, r = table.unpack(state.selected)
 
+    -- TODO: No move (and no sound effect) when already at edge of board.
     local move_direction
     state.direction_input_buffer, move_direction = M.handle_directional_buttons(
         state.direction_input_buffer,
@@ -211,6 +212,7 @@ function M.handle_directional_buttons(input_buffer, even_row)
 end
 
 function M.get_direction(up, down, left, right, even_row)
+    -- TOOD: Move diagonally up/down if pressing left/right on side.
     if (up and left) then
         return DIRECTION_UP_LEFT
     elseif (up and right) then
@@ -343,4 +345,3 @@ return M
 -- <PALETTE>
 -- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE>
-
