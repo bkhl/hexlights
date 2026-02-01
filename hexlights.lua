@@ -54,6 +54,7 @@ local SELECT_SPRITE          = 256
 local BOARD_OFFSET_X         = 32
 local BOARD_OFFSET_Y         = 24
 
+local SCALE                  = { 0, 3, 5, 7, 10, 12 }
 
 --------------------------------------------------------------------------------
 -- TIC-80 Callbacks
@@ -141,10 +142,12 @@ function M.handle_buttons_game(state)
     )
 
     if move_direction then
+        sfx(math.random(1, 2), 64 + SCALE[math.random(1, 6)], 10)
         M.move(state, move_direction)
     end
 
     if btnp(BUTTON_B) then
+        sfx(0, nil, 10)
         M.toggle(state.board, q, r)
     end
 end
@@ -326,6 +329,17 @@ return M
 -- 017:0000030000003400000340000034000043400000400000000000000000000000
 -- </SPRITES>
 
+-- <WAVES>
+-- 001:01234567876543210123456776543210
+-- </WAVES>
+
+-- <SFX>
+-- 000:9000f000f000d000f000f000f000f000f000f000f000f000f000f000f000f000f000f000f000f000f000f000f000f000f000f000f000f000f000f000402000000000
+-- 001:41077100c108f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100502000000000
+-- 002:41087100c107f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100f100507000000000
+-- </SFX>
+
 -- <PALETTE>
 -- 000:1a1c2c5d275db13e53ef7d57ffcd75a7f07038b76425717929366f3b5dc941a6f673eff7f4f4f494b0c2566c86333c57
 -- </PALETTE>
+
