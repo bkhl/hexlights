@@ -18,7 +18,9 @@ test:
 
 lsp:
 	@mkdir -p "$(LUALS_CACHE)"
-	@exec podman run --rm -i --init --network=none  \
+	@exec podman run --rm --interactive \
+	    --init \
+		--network=none  \
 		-v "$(CURDIR):$(CURDIR):ro,z" \
 		-v "$(LUALS_CACHE):$(LUALS_CACHE):z" \
 		-w "$(CURDIR)" \
