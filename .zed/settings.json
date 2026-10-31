@@ -1,0 +1,16 @@
+{
+  "languages": {
+    "Lua": {
+      "enable_language_server": true,
+      "language_servers": ["lua-language-server"],
+    },
+  },
+  "lsp": {
+    "lua-language-server": {
+      "binary": {
+        "path": "make",
+        "arguments": ["lsp"],
+      },
+    },
+  },
+}
