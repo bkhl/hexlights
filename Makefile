@@ -3,7 +3,7 @@ MAKE_FLAGS += --always-make
 LUACHECK_IMAGE := ghcr.io/lunarmodules/luacheck:master
 BUSTED_IMAGE := ghcr.io/lunarmodules/busted:master
 
-LUALS_IMAGE := ghcr.io/bkhl/lsp-images/lua-language-server:latest
+LUALS_IMAGE := ghcr.io/bkhl/tool-images/lua-language-server:latest
 LUALS_CACHE := $(HOME)/.cache/lua-language-server
 
 define run
