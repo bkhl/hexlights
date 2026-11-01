@@ -1,3 +1,8 @@
 {
-  "runtime.version": "Lua 5.3"
+  "runtime.version": "Lua 5.3",
+  "workspace.library": [
+    "${env:LUALS_CACHE}/addons/tic80/library",
+    "${env:LUALS_CACHE}/addons/busted/library",
+    "${env:LUALS_CACHE}/addons/luassert/library"
+  ],
 }

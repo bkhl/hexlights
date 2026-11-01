@@ -1,29 +1,27 @@
 MAKE_FLAGS += --always-make
 
-LUACHECK_IMAGE := ghcr.io/lunarmodules/luacheck:master
 BUSTED_IMAGE := ghcr.io/lunarmodules/busted:master
 
 LUALS_IMAGE := ghcr.io/bkhl/tool-images/lua-language-server:latest
-LUALS_CACHE := $(HOME)/.cache/lua-language-server
+LUALS_CACHE := $(or $(XDG_RUNTIME_DIR),$(TMPDIR),/tmp)/lua-language-server/$(notdir $(CURDIR))
 
 define run
-	podman run --rm --interactive --volume $(CURDIR):$(CURDIR):z --workdir $(CURDIR)
+	podman run --rm --interactive \
+	--network=none \
+	--volume="$(CURDIR):$(CURDIR):ro,z" \
+	--workdir "$(CURDIR)"
 endef
 
-lint:
-	$(run) $(LUACHECK_IMAGE) --no-color $(CURDIR)
+LUALS_CACHE_ARGS := --env=LUALS_CACHE="$(LUALS_CACHE)" --volume="$(LUALS_CACHE):$(LUALS_CACHE):z"
+
+luals_cache:
+	@mkdir -p "$(LUALS_CACHE)"
+
+lint: luals_cache
+	$(run) $(LUALS_CACHE_ARGS) $(if $(MAKE_TERMOUT),--tty) $(LUALS_IMAGE) --check="$(CURDIR)" --checklevel=Warning
 
 test:
 	$(run) $(BUSTED_IMAGE) --pattern=test_ $(CURDIR)
 
-lsp:
-	@mkdir -p "$(LUALS_CACHE)"
-	@exec podman run --rm --interactive \
-	    --init \
-		--network=none  \
-		-v "$(CURDIR):$(CURDIR):ro,z" \
-		-v "$(LUALS_CACHE):$(LUALS_CACHE):z" \
-		-w "$(CURDIR)" \
-		$(LUALS_IMAGE) \
-		--metapath="$(LUALS_CACHE)/meta" \
-		--logpath="$(LUALS_CACHE)/log"
+lsp: luals_cache
+	@exec $(run) $(LUALS_CACHE_ARGS) $(LUALS_IMAGE) --metapath="$(LUALS_CACHE)/meta" --logpath="$(LUALS_CACHE)/log"
