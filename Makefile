@@ -1,5 +1,3 @@
-MAKE_FLAGS += --always-make
-
 BUSTED_IMAGE := ghcr.io/lunarmodules/busted:master
 
 LUALS_IMAGE := ghcr.io/bkhl/tool-images/lua-language-server:latest
@@ -14,14 +12,16 @@ endef
 
 LUALS_CACHE_ARGS := --env=LUALS_CACHE="$(LUALS_CACHE)" --volume="$(LUALS_CACHE):$(LUALS_CACHE):z"
 
-luals_cache:
+$(LUALS_CACHE):
 	@mkdir -p "$(LUALS_CACHE)"
 
-lint: luals_cache
+.PHONY: lint
+lint: $(LUALS_CACHE)
 	$(run) $(LUALS_CACHE_ARGS) $(if $(MAKE_TERMOUT),--tty) $(LUALS_IMAGE) --check="$(CURDIR)" --checklevel=Warning
 
 test:
 	$(run) $(BUSTED_IMAGE) --pattern=test_ $(CURDIR)
 
-lsp: luals_cache
+.PHONY: lsp
+lsp: $(LUALS_CACHE)
 	@exec $(run) $(LUALS_CACHE_ARGS) $(LUALS_IMAGE) --metapath="$(LUALS_CACHE)/meta" --logpath="$(LUALS_CACHE)/log"
