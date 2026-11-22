@@ -111,7 +111,8 @@ function M.get_game_start_state()
         mode = M.mode_game,
         selected = { math.random(1, Q_MAX), math.random(1, R_MAX) },
         direction_input_buffer = {},
-        board = board
+        board = board,
+        error_sound_played_last_tick = false
     }
 end
 
@@ -135,7 +136,6 @@ end
 function M.handle_buttons_game(state)
     local q, r = table.unpack(state.selected)
 
-    -- TODO: No move (and no sound effect) when already at edge of board.
     local move_direction
     state.direction_input_buffer, move_direction = M.handle_directional_buttons(
         state.direction_input_buffer,
@@ -143,8 +143,17 @@ function M.handle_buttons_game(state)
     )
 
     if move_direction then
-        sfx(math.random(1, 2), 64 + SCALE[math.random(1, 6)], 10)
-        M.move(state, move_direction)
+        if M.move(state, move_direction) then
+            sfx(math.random(1, 2), 64 + SCALE[math.random(1, 6)], 10)
+            state.error_sound_played_last_tick = false
+        else
+            if state.error_sound_played_last_tick then
+                state.error_sound_played_last_tick = false
+            else
+                sfx(2, 52, 10)
+                state.error_sound_played_last_tick = true
+            end
+        end
     end
 
     if btnp(BUTTON_B) then
@@ -235,8 +244,12 @@ end
 function M.move(state, direction)
     local q, r = table.unpack(state.selected)
     local velocity_q, velocity_r = table.unpack(DIRECTION_TO_VELOCITY[direction])
-    q, r = q + velocity_q, r + velocity_r
-    state.selected = { M.clamp(q, 1, Q_MAX), M.clamp(r, 1, R_MAX) }
+    local new_q, new_r = M.clamp(q + velocity_q, 1, Q_MAX), M.clamp(r + velocity_r, 1, R_MAX)
+    if new_q == q and new_r == r then
+        return false
+    end
+    state.selected = { new_q, new_r }
+    return true
 end
 
 function M.toggle(board, q, r)
