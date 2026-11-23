@@ -23,6 +23,8 @@
     (set state.mode-name new-mode-name)))
 
 (fn love.load [_args]
+  (local font (love.graphics.newFont "assets/Kenney Future Square.ttf" 48))
+  (love.graphics.setFont font)
   (set-mode "mode.start")
   (love.graphics.setDefaultFilter "nearest" "nearest")
   (when (not= :Web (love.system.getOS)) (repl.start)))
