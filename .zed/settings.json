@@ -1,15 +1,34 @@
 {
   "languages": {
+    "Fennel": {
+      "enable_language_server": true,
+      "language_servers": ["fennel-ls"],
+      "format_on_save": "on",
+      "formatter": {
+        "external": {
+          "command": "make",
+          "arguments": ["fnlfmt"],
+        },
+      },
+      "indent_guides": { "enabled": false },
+    },
     "Lua": {
       "enable_language_server": true,
       "language_servers": ["lua-language-server"],
+      "format_on_save": "on",
     },
   },
   "lsp": {
+    "fennel-ls": {
+      "binary": {
+        "path": "make",
+        "arguments": ["fennel-ls"],
+      },
+    },
     "lua-language-server": {
       "binary": {
         "path": "make",
-        "arguments": ["lsp"],
+        "arguments": ["lua-language-server"],
       },
     },
   },
