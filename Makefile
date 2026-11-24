@@ -3,8 +3,6 @@ DEV_IMAGE := localhost/hexlights-dev:latest
 LOVE_VERSION := 11.5
 FENNEL_VERSION := 1.6.1
 
-
-
 LUALS_IMAGE := ghcr.io/bkhl/tool-images/lua-language-server:latest
 LUALS_CACHE := $(or $(XDG_RUNTIME_DIR),$(TMPDIR),/tmp)/lua-language-server/$(notdir $(CURDIR))
 
@@ -29,9 +27,6 @@ $(LOVE): $(LOVE_APPIMAGE)
 	cd lib && ./$(notdir $<) --appimage-extract
 	rm -rf lib/love-$(LOVE_VERSION) && mv lib/squashfs-root lib/love-$(LOVE_VERSION)
 	touch $@
-
-run: $(LOVE)
-	$(LOVE) $(CURDIR)
 
 LIB += lib/fennel.lua
 lib/fennel.lua:
