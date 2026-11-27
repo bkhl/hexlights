@@ -13,9 +13,9 @@
   (set context.state (context.mode.init))
   (print (.. "Reset state of " context.mode-name)))
 
-(fn keyreleased [context key]
+(fn keypressed [context key]
   (case key
     :f5 (reload! context)
     :f6 (reset! context)))
 
-{: keyreleased}
+{: keypressed}

@@ -22,7 +22,7 @@ Press space to return to the previous mode.")
   (love.graphics.print state.message 10 60)
   (love.graphics.print state.traceback 15 125))
 
-(fn keyreleased [key _code context-switch]
+(fn keypressed [key _code context-switch]
   (case key
     :escape (love.event.quit)
     :space (context-switch state.old-mode)))
@@ -41,4 +41,4 @@ Press space to return to the previous mode.")
   (set state.traceback traceback)
   {})
 
-{: init : draw : keyreleased}
+{: init : draw : keypressed}

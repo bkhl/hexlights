@@ -15,9 +15,9 @@
   (context.switch :start)
   (love.graphics.setDefaultFilter "nearest" "nearest"))
 
-(fn love.keyreleased [key]
-  (when-dev ((. (require :dev) :keyreleased) context key))
-  (context.mode.keyreleased context.state key))
+(fn love.keypressed [key]
+  (when-dev ((. (require :dev) :keypressed) context key))
+  (context.mode.keypressed context.state key))
 
 (fn safely [f]
   (xpcall f #(context.switch :error context.mode-name $ (fennel.traceback))))
@@ -29,8 +29,8 @@
   (when context.mode.update
     (safely #(context.mode.update dt context.switch))))
 
-(fn love.keyreleased [key code isrepeat]
+(fn love.keypressed [key code isrepeat]
   (if (and (love.keyboard.isDown "lctrl" "rctrl" "capslock") (= key "q"))
       (love.event.quit)
       (not isrepeat)
-      (safely #(context.mode.keyreleased key code context.switch))))
+      (safely #(context.mode.keypressed key code context.switch))))
