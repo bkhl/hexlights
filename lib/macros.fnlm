@@ -1,4 +1,0 @@
-(fn incf [value ?by]
-  `(set ,value (+ ,value (or ,?by 1))))
-
-{: incf}

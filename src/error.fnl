@@ -7,11 +7,10 @@
 ;; Since we can't know which module needs to be reloaded, we rely on the user
 ;; doing a ,reload foo in the repl.
 
-(local state {:message "" :traceback "" :old-mode :intro})
+(local state {:message "" :traceback "" :old-mode :start})
 
-(local text
-       "Press escape to quit.
-Press space to return to the previous mode after reloading in the repl.")
+(local text "Press escape to quit.
+Press space to return to the previous mode.")
 
 (local debug-font (love.graphics.setNewFont 16))
 
@@ -23,10 +22,10 @@ Press space to return to the previous mode after reloading in the repl.")
   (love.graphics.print state.message 10 60)
   (love.graphics.print state.traceback 15 125))
 
-(fn keyreleased [key _code set-mode]
+(fn keyreleased [key _code context-switch]
   (case key
     :escape (love.event.quit)
-    :space (set-mode state.old-mode)))
+    :space (context-switch state.old-mode)))
 
 (fn color-message [message]
   ;; Convert compiler's ANSI escape codes to Löve-friendly codes.
@@ -34,11 +33,12 @@ Press space to return to the previous mode after reloading in the repl.")
     (pre selected post) [[1 1 1] pre [1 0.2 0.2] selected [1 1 1] post]
     _ message))
 
-(fn activate [old-mode message traceback]
+(fn init [old-mode message traceback]
   (print message)
   (print traceback)
   (set state.old-mode old-mode)
   (set state.message (color-message message))
-  (set state.traceback traceback))
+  (set state.traceback traceback)
+  {})
 
-{: draw : keyreleased : activate}
+{: init : draw : keyreleased}

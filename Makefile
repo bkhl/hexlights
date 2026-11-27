@@ -44,6 +44,9 @@ fennel-ls:
 fnlfmt:
 	@exec $(run) $(DEV_IMAGE) fnlfmt /dev/stdin
 
+$(LUALS_CACHE):
+	mkdir -p $(LUALS_CACHE)
+
 LUALS_CACHE_ARGS := --env=LUALS_CACHE="$(LUALS_CACHE)" --volume="$(LUALS_CACHE):$(LUALS_CACHE):z"
 .PHONY: lua-language-server
 lua-language-server: $(LUALS_CACHE)
