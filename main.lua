@@ -1,6 +1,6 @@
 -- main.lua for development mode
 
-local fennel = require("lib.fennel")
+local fennel = require("lib.fennel").install({ correlate = true })
 
 package.loaded["fennel-modules"] = {}
 
