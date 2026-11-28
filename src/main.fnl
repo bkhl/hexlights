@@ -13,13 +13,17 @@
   (love.graphics.setDefaultFilter "nearest" "nearest")
   (context.switch :start))
 
-(fn handle-callback-result [ok ...]
-  (when ok
-    (case ...
-      mode_ (context.switch ...))))
-
 (fn handle-error [err]
-  (context.switch :error context.mode-name err (fennel.traceback)))
+  (if (= context.mode-name :error)
+      (.. (tostring err) "\n" (fennel.traceback))
+      (do
+        (context.switch :error context.mode-name err (fennel.traceback) nil)
+        nil)))
+
+(fn handle-callback-result [ok ...]
+  (if ok
+      (case ... mode_ (context.switch ...))
+      (case ... fatal (error fatal 0))))
 
 (fn call-mode-callback [event ...]
   (case (. context.mode event)

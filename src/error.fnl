@@ -1,3 +1,4 @@
+;; Error screen
 ;; Based on https://codeberg.org/alexjgriffith/min-love2d-fennel/src/commit/3ddc2747e7eb5127203b1198916483fadbdc2e43/error-mode.fnl
 
 ;; This mode has two purposes:
