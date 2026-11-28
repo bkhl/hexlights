@@ -10,27 +10,31 @@
   (set context.state (context.mode.init ...)))
 
 (fn love.load [_args]
-  (local font (love.graphics.newFont "assets/Kenney Future Square.ttf" 48))
-  (love.graphics.setFont font)
-  (context.switch :start)
-  (love.graphics.setDefaultFilter "nearest" "nearest"))
+  (love.graphics.setDefaultFilter "nearest" "nearest")
+  (context.switch :start))
 
-(fn love.keypressed [key]
-  (when-dev ((. (require :dev) :keypressed) context key))
-  (context.mode.keypressed context.state key))
+(fn handle-callback-result [ok ...]
+  (when ok
+    (case ...
+      mode_ (context.switch ...))))
 
-(fn safely [f]
-  (xpcall f #(context.switch :error context.mode-name $ (fennel.traceback))))
+(fn handle-error [err]
+  (context.switch :error context.mode-name err (fennel.traceback)))
 
-(fn love.draw []
-  (safely context.mode.draw))
+(fn call-mode-callback [event ...]
+  (case (. context.mode event)
+    f (handle-callback-result (xpcall f handle-error context.state ...))))
 
 (fn love.update [dt]
   (when context.mode.update
-    (safely #(context.mode.update dt context.switch))))
+    (call-mode-callback :update dt)))
+
+(fn love.draw []
+  (call-mode-callback :draw))
 
 (fn love.keypressed [key code isrepeat]
+  (when-dev ((. (require :dev) :keypressed) context key))
   (if (and (love.keyboard.isDown "lctrl" "rctrl" "capslock") (= key "q"))
       (love.event.quit)
       (not isrepeat)
-      (safely #(context.mode.keypressed key code context.switch))))
+      (call-mode-callback :keypressed key code)))

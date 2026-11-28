@@ -2,13 +2,14 @@
 
 (local palette (require :palette))
 
+(local font (love.graphics.newFont "assets/Kenney Future Square.ttf" 48))
+
 (fn init []
+  (love.graphics.setFont font)
   (love.graphics.setBackgroundColor palette.cyan)
   {})
 
-(fn draw [_message]
+(fn draw []
   (love.graphics.printf "Press A to start" 220 140 200 "center"))
 
-(fn keypressed [_key])
-
-{: init : draw : keypressed}
+{: init : draw}
